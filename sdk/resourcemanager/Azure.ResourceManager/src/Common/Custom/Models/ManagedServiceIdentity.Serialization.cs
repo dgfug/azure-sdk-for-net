@@ -15,15 +15,16 @@ namespace Azure.ResourceManager.Models
     [JsonConverter(typeof(ManagedServiceIdentityConverter))]
     public partial class ManagedServiceIdentity
     {
-        internal static void Write(Utf8JsonWriter writer, ManagedServiceIdentity model, JsonSerializerOptions options = default)
+        internal void Write(Utf8JsonWriter writer, JsonSerializerOptions options = default)
         {
             writer.WriteStartObject();
-            JsonSerializer.Serialize(writer, model.ManagedServiceIdentityType, options);
-            if (Optional.IsCollectionDefined(model.UserAssignedIdentities))
+            writer.WritePropertyName("type");
+            JsonSerializer.Serialize(writer, ManagedServiceIdentityType, options);
+            if (Optional.IsCollectionDefined(UserAssignedIdentities))
             {
-                writer.WritePropertyName("userAssignedIdentities");
+                writer.WritePropertyName("userAssignedIdentities"u8);
                 writer.WriteStartObject();
-                foreach (var item in model.UserAssignedIdentities)
+                foreach (var item in UserAssignedIdentities)
                 {
                     writer.WritePropertyName(item.Key);
                     if (item.Value == null)
@@ -48,9 +49,9 @@ namespace Azure.ResourceManager.Models
             Optional<IDictionary<ResourceIdentifier, UserAssignedIdentity>> userAssignedIdentities = default;
             foreach (var property in element.EnumerateObject())
             {
-                if (property.NameEquals("principalId"))
+                if (property.NameEquals("principalId"u8))
                 {
-                    if (property.Value.ValueKind == JsonValueKind.Null)
+                    if (property.Value.ValueKind == JsonValueKind.Null || property.Value.GetString().Length == 0)
                     {
                         property.ThrowNonNullablePropertyIsNull();
                         continue;
@@ -58,9 +59,9 @@ namespace Azure.ResourceManager.Models
                     principalId = property.Value.GetGuid();
                     continue;
                 }
-                if (property.NameEquals("tenantId"))
+                if (property.NameEquals("tenantId"u8))
                 {
-                    if (property.Value.ValueKind == JsonValueKind.Null)
+                    if (property.Value.ValueKind == JsonValueKind.Null || property.Value.GetString().Length == 0)
                     {
                         property.ThrowNonNullablePropertyIsNull();
                         continue;
@@ -68,12 +69,12 @@ namespace Azure.ResourceManager.Models
                     tenantId = property.Value.GetGuid();
                     continue;
                 }
-                if (property.NameEquals("type"))
+                if (property.NameEquals("type"u8))
                 {
-                    type = JsonSerializer.Deserialize<ManagedServiceIdentityType>("{"+property.ToString()+"}", options);
+                    type = JsonSerializer.Deserialize<ManagedServiceIdentityType>(property.Value.GetRawText(), options);
                     continue;
                 }
-                if (property.NameEquals("userAssignedIdentities"))
+                if (property.NameEquals("userAssignedIdentities"u8))
                 {
                     if (property.Value.ValueKind == JsonValueKind.Null)
                     {
@@ -96,7 +97,7 @@ namespace Azure.ResourceManager.Models
         {
             public override void Write(Utf8JsonWriter writer, ManagedServiceIdentity model, JsonSerializerOptions options)
             {
-                ManagedServiceIdentity.Write(writer, model, options);
+                model.Write(writer, options);
             }
             public override ManagedServiceIdentity Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
             {

@@ -12,9 +12,8 @@ using BenchmarkDotNet.Jobs;
 
 namespace Azure.Core.Perf
 {
-    [MemoryDiagnoser]
     [SimpleJob(RuntimeMoniker.NetCoreApp31, baseline: true)]
-    [SimpleJob(RuntimeMoniker.Net461)]
+    [SimpleJob(RuntimeMoniker.Net462)]
     [SimpleJob(RuntimeMoniker.Net60)]
     public class DynamicObjectBenchmark
     {
@@ -88,7 +87,7 @@ namespace Azure.Core.Perf
         public void DeserializeWithBinaryDataAndAccess()
         {
             var model = ModelWithBinaryData.DeserializeModelWithBinaryData(_jsonDocument.RootElement);
-            var properties = model.Properties.ToDictionaryFromJson();
+            var properties = model.Properties.ToObjectFromJson() as Dictionary<string, object>;
             var innerProperties = properties["innerProperties"] as Dictionary<string, object>;
             var innerA = innerProperties["a"] as string;
         }

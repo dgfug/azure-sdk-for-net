@@ -21,29 +21,31 @@ namespace Azure.ResourceManager.DeviceUpdate.Tests
         [RecordedTest]
         public async Task Delete()
         {
-            Subscription subscription = await Client.GetDefaultSubscriptionAsync();
-            ResourceGroup rg = await CreateResourceGroup(subscription, "testRg-");
+            SubscriptionResource subscription = await Client.GetDefaultSubscriptionAsync();
+            ResourceGroupResource rg = await CreateResourceGroup(subscription, "testRg-");
             string accountName = Recording.GenerateAssetName("Account-");
-            DeviceUpdateAccount account = await CreateAccount(rg, accountName);
+            DeviceUpdateAccountResource account = await CreateAccount(rg, accountName);
             string instanceName = Recording.GenerateAssetName("Instance-");
-            DeviceUpdateInstance instance = await CreateInstance(account, instanceName);
+            DeviceUpdateInstanceResource instance = await CreateInstance(account, instanceName);
             await instance.DeleteAsync(WaitUntil.Completed);
             var ex = Assert.ThrowsAsync<RequestFailedException>(async () => await instance.GetAsync());
             Assert.AreEqual(404, ex.Status);
         }
 
-        [TestCase]
-        [RecordedTest]
-        public async Task AddTag()
+        //[TestCase(null)] Need to re-record
+        [TestCase(true)]
+        //[TestCase(false)] Need to re-record
+        public async Task AddTag(bool? useTragResource)
         {
-            Subscription subscription = await Client.GetDefaultSubscriptionAsync();
-            ResourceGroup rg = await CreateResourceGroup(subscription, "testRg-");
+            SetTagResourceUsage(Client, useTragResource);
+            SubscriptionResource subscription = await Client.GetDefaultSubscriptionAsync();
+            ResourceGroupResource rg = await CreateResourceGroup(subscription, "testRg-");
             string accountName = Recording.GenerateAssetName("Account-");
-            DeviceUpdateAccount account = await CreateAccount(rg, accountName);
+            DeviceUpdateAccountResource account = await CreateAccount(rg, accountName);
             string instanceName = Recording.GenerateAssetName("Instance-");
-            DeviceUpdateInstance instance = await CreateInstance(account, instanceName);
+            DeviceUpdateInstanceResource instance = await CreateInstance(account, instanceName);
             string key = "newTag", value = "newValue";
-            DeviceUpdateInstance updatedInstance = await instance.AddTagAsync(key, value);
+            DeviceUpdateInstanceResource updatedInstance = await instance.AddTagAsync(key, value);
             CollectionAssert.AreEquivalent(new Dictionary<string, string> { { key, value } }, updatedInstance.Data.Tags);
         }
     }

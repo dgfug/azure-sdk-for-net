@@ -8,7 +8,7 @@
 using System.Text.Json;
 using Azure.Core;
 
-namespace Azure.ResourceManager.Management.Models
+namespace Azure.ResourceManager.ManagementGroups.Models
 {
     public partial class CreateManagementGroupDetails : IUtf8JsonSerializable
     {
@@ -17,7 +17,7 @@ namespace Azure.ResourceManager.Management.Models
             writer.WriteStartObject();
             if (Optional.IsDefined(Parent))
             {
-                writer.WritePropertyName("parent");
+                writer.WritePropertyName("parent"u8);
                 writer.WriteObjectValue(Parent);
             }
             writer.WriteEndObject();

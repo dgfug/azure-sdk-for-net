@@ -15,18 +15,24 @@ namespace Azure.ResourceManager.Cdn.Models
         void IUtf8JsonSerializable.Write(Utf8JsonWriter writer)
         {
             writer.WriteStartObject();
-            writer.WritePropertyName("name");
+            writer.WritePropertyName("name"u8);
             writer.WriteStringValue(Name.ToString());
             writer.WriteEndObject();
         }
 
         internal static DeliveryRuleCondition DeserializeDeliveryRuleCondition(JsonElement element)
         {
+            if (element.ValueKind == JsonValueKind.Null)
+            {
+                return null;
+            }
             if (element.TryGetProperty("name", out JsonElement discriminator))
             {
                 switch (discriminator.GetString())
                 {
+                    case "ClientPort": return DeliveryRuleClientPortCondition.DeserializeDeliveryRuleClientPortCondition(element);
                     case "Cookies": return DeliveryRuleCookiesCondition.DeserializeDeliveryRuleCookiesCondition(element);
+                    case "HostName": return DeliveryRuleHostNameCondition.DeserializeDeliveryRuleHostNameCondition(element);
                     case "HttpVersion": return DeliveryRuleHttpVersionCondition.DeserializeDeliveryRuleHttpVersionCondition(element);
                     case "IsDevice": return DeliveryRuleIsDeviceCondition.DeserializeDeliveryRuleIsDeviceCondition(element);
                     case "PostArgs": return DeliveryRulePostArgsCondition.DeserializeDeliveryRulePostArgsCondition(element);
@@ -37,21 +43,15 @@ namespace Azure.ResourceManager.Cdn.Models
                     case "RequestMethod": return DeliveryRuleRequestMethodCondition.DeserializeDeliveryRuleRequestMethodCondition(element);
                     case "RequestScheme": return DeliveryRuleRequestSchemeCondition.DeserializeDeliveryRuleRequestSchemeCondition(element);
                     case "RequestUri": return DeliveryRuleRequestUriCondition.DeserializeDeliveryRuleRequestUriCondition(element);
-                    case "UrlFileExtension": return DeliveryRuleUrlFileExtensionCondition.DeserializeDeliveryRuleUrlFileExtensionCondition(element);
-                    case "UrlFileName": return DeliveryRuleUrlFileNameCondition.DeserializeDeliveryRuleUrlFileNameCondition(element);
-                    case "UrlPath": return DeliveryRuleUrlPathCondition.DeserializeDeliveryRuleUrlPathCondition(element);
+                    case "ServerPort": return DeliveryRuleServerPortCondition.DeserializeDeliveryRuleServerPortCondition(element);
+                    case "SocketAddr": return DeliveryRuleSocketAddressCondition.DeserializeDeliveryRuleSocketAddressCondition(element);
+                    case "SslProtocol": return DeliveryRuleSslProtocolCondition.DeserializeDeliveryRuleSslProtocolCondition(element);
+                    case "UrlFileExtension": return DeliveryRuleUriFileExtensionCondition.DeserializeDeliveryRuleUriFileExtensionCondition(element);
+                    case "UrlFileName": return DeliveryRuleUriFileNameCondition.DeserializeDeliveryRuleUriFileNameCondition(element);
+                    case "UrlPath": return DeliveryRuleUriPathCondition.DeserializeDeliveryRuleUriPathCondition(element);
                 }
             }
-            MatchVariable name = default;
-            foreach (var property in element.EnumerateObject())
-            {
-                if (property.NameEquals("name"))
-                {
-                    name = new MatchVariable(property.Value.GetString());
-                    continue;
-                }
-            }
-            return new DeliveryRuleCondition(name);
+            return UnknownDeliveryRuleCondition.DeserializeUnknownDeliveryRuleCondition(element);
         }
     }
 }

@@ -8,6 +8,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Azure.Core;
 
 namespace Azure.Search.Documents.Indexes.Models
 {
@@ -20,21 +21,15 @@ namespace Azure.Search.Documents.Indexes.Models
         /// <exception cref="ArgumentNullException"> <paramref name="name"/> or <paramref name="commonWords"/> is null. </exception>
         public CommonGramTokenFilter(string name, IEnumerable<string> commonWords) : base(name)
         {
-            if (name == null)
-            {
-                throw new ArgumentNullException(nameof(name));
-            }
-            if (commonWords == null)
-            {
-                throw new ArgumentNullException(nameof(commonWords));
-            }
+            Argument.AssertNotNull(name, nameof(name));
+            Argument.AssertNotNull(commonWords, nameof(commonWords));
 
             CommonWords = commonWords.ToList();
             ODataType = "#Microsoft.Azure.Search.CommonGramTokenFilter";
         }
 
         /// <summary> Initializes a new instance of CommonGramTokenFilter. </summary>
-        /// <param name="oDataType"> Identifies the concrete type of the token filter. </param>
+        /// <param name="oDataType"> A URI fragment specifying the type of token filter. </param>
         /// <param name="name"> The name of the token filter. It must only contain letters, digits, spaces, dashes or underscores, can only start and end with alphanumeric characters, and is limited to 128 characters. </param>
         /// <param name="commonWords"> The set of common words. </param>
         /// <param name="ignoreCase"> A value indicating whether common words matching will be case insensitive. Default is false. </param>

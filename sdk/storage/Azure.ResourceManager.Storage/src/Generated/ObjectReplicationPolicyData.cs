@@ -13,7 +13,10 @@ using Azure.ResourceManager.Storage.Models;
 
 namespace Azure.ResourceManager.Storage
 {
-    /// <summary> A class representing the ObjectReplicationPolicy data model. </summary>
+    /// <summary>
+    /// A class representing the ObjectReplicationPolicy data model.
+    /// The replication policy between two storage accounts. Multiple rules can be defined in one policy.
+    /// </summary>
     public partial class ObjectReplicationPolicyData : ResourceData
     {
         /// <summary> Initializes a new instance of ObjectReplicationPolicyData. </summary>
@@ -28,14 +31,14 @@ namespace Azure.ResourceManager.Storage
         /// <param name="resourceType"> The resourceType. </param>
         /// <param name="systemData"> The systemData. </param>
         /// <param name="policyId"> A unique id for object replication policy. </param>
-        /// <param name="enabledTime"> Indicates when the policy is enabled on the source account. </param>
+        /// <param name="enabledOn"> Indicates when the policy is enabled on the source account. </param>
         /// <param name="sourceAccount"> Required. Source account name. It should be full resource id if allowCrossTenantReplication set to false. </param>
         /// <param name="destinationAccount"> Required. Destination account name. It should be full resource id if allowCrossTenantReplication set to false. </param>
         /// <param name="rules"> The storage account object replication rules. </param>
-        internal ObjectReplicationPolicyData(ResourceIdentifier id, string name, ResourceType resourceType, SystemData systemData, string policyId, DateTimeOffset? enabledTime, string sourceAccount, string destinationAccount, IList<ObjectReplicationPolicyRule> rules) : base(id, name, resourceType, systemData)
+        internal ObjectReplicationPolicyData(ResourceIdentifier id, string name, ResourceType resourceType, SystemData systemData, string policyId, DateTimeOffset? enabledOn, string sourceAccount, string destinationAccount, IList<ObjectReplicationPolicyRule> rules) : base(id, name, resourceType, systemData)
         {
             PolicyId = policyId;
-            EnabledTime = enabledTime;
+            EnabledOn = enabledOn;
             SourceAccount = sourceAccount;
             DestinationAccount = destinationAccount;
             Rules = rules;
@@ -44,7 +47,7 @@ namespace Azure.ResourceManager.Storage
         /// <summary> A unique id for object replication policy. </summary>
         public string PolicyId { get; }
         /// <summary> Indicates when the policy is enabled on the source account. </summary>
-        public DateTimeOffset? EnabledTime { get; }
+        public DateTimeOffset? EnabledOn { get; }
         /// <summary> Required. Source account name. It should be full resource id if allowCrossTenantReplication set to false. </summary>
         public string SourceAccount { get; set; }
         /// <summary> Required. Destination account name. It should be full resource id if allowCrossTenantReplication set to false. </summary>

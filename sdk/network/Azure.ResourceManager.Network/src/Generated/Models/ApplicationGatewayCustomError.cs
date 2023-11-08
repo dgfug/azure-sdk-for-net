@@ -5,9 +5,11 @@
 
 #nullable disable
 
+using System;
+
 namespace Azure.ResourceManager.Network.Models
 {
-    /// <summary> Customer error of an application gateway. </summary>
+    /// <summary> Custom error of an application gateway. </summary>
     public partial class ApplicationGatewayCustomError
     {
         /// <summary> Initializes a new instance of ApplicationGatewayCustomError. </summary>
@@ -16,17 +18,17 @@ namespace Azure.ResourceManager.Network.Models
         }
 
         /// <summary> Initializes a new instance of ApplicationGatewayCustomError. </summary>
-        /// <param name="statusCode"> Status code of the application gateway customer error. </param>
-        /// <param name="customErrorPageUrl"> Error page URL of the application gateway customer error. </param>
-        internal ApplicationGatewayCustomError(ApplicationGatewayCustomErrorStatusCode? statusCode, string customErrorPageUrl)
+        /// <param name="statusCode"> Status code of the application gateway custom error. </param>
+        /// <param name="customErrorPageUri"> Error page URL of the application gateway custom error. </param>
+        internal ApplicationGatewayCustomError(ApplicationGatewayCustomErrorStatusCode? statusCode, Uri customErrorPageUri)
         {
             StatusCode = statusCode;
-            CustomErrorPageUrl = customErrorPageUrl;
+            CustomErrorPageUri = customErrorPageUri;
         }
 
-        /// <summary> Status code of the application gateway customer error. </summary>
+        /// <summary> Status code of the application gateway custom error. </summary>
         public ApplicationGatewayCustomErrorStatusCode? StatusCode { get; set; }
-        /// <summary> Error page URL of the application gateway customer error. </summary>
-        public string CustomErrorPageUrl { get; set; }
+        /// <summary> Error page URL of the application gateway custom error. </summary>
+        public Uri CustomErrorPageUri { get; set; }
     }
 }

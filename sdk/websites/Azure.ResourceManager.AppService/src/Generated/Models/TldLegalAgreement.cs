@@ -6,6 +6,7 @@
 #nullable disable
 
 using System;
+using Azure.Core;
 
 namespace Azure.ResourceManager.AppService.Models
 {
@@ -19,18 +20,9 @@ namespace Azure.ResourceManager.AppService.Models
         /// <exception cref="ArgumentNullException"> <paramref name="agreementKey"/>, <paramref name="title"/> or <paramref name="content"/> is null. </exception>
         internal TldLegalAgreement(string agreementKey, string title, string content)
         {
-            if (agreementKey == null)
-            {
-                throw new ArgumentNullException(nameof(agreementKey));
-            }
-            if (title == null)
-            {
-                throw new ArgumentNullException(nameof(title));
-            }
-            if (content == null)
-            {
-                throw new ArgumentNullException(nameof(content));
-            }
+            Argument.AssertNotNull(agreementKey, nameof(agreementKey));
+            Argument.AssertNotNull(title, nameof(title));
+            Argument.AssertNotNull(content, nameof(content));
 
             AgreementKey = agreementKey;
             Title = title;
@@ -41,13 +33,13 @@ namespace Azure.ResourceManager.AppService.Models
         /// <param name="agreementKey"> Unique identifier for the agreement. </param>
         /// <param name="title"> Agreement title. </param>
         /// <param name="content"> Agreement details. </param>
-        /// <param name="url"> URL where a copy of the agreement details is hosted. </param>
-        internal TldLegalAgreement(string agreementKey, string title, string content, string url)
+        /// <param name="uri"> URL where a copy of the agreement details is hosted. </param>
+        internal TldLegalAgreement(string agreementKey, string title, string content, Uri uri)
         {
             AgreementKey = agreementKey;
             Title = title;
             Content = content;
-            Url = url;
+            Uri = uri;
         }
 
         /// <summary> Unique identifier for the agreement. </summary>
@@ -57,6 +49,6 @@ namespace Azure.ResourceManager.AppService.Models
         /// <summary> Agreement details. </summary>
         public string Content { get; }
         /// <summary> URL where a copy of the agreement details is hosted. </summary>
-        public string Url { get; }
+        public Uri Uri { get; }
     }
 }

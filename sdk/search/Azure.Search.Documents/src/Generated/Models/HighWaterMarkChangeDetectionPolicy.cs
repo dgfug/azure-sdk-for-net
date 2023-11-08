@@ -6,6 +6,7 @@
 #nullable disable
 
 using System;
+using Azure.Core;
 
 namespace Azure.Search.Documents.Indexes.Models
 {
@@ -17,17 +18,14 @@ namespace Azure.Search.Documents.Indexes.Models
         /// <exception cref="ArgumentNullException"> <paramref name="highWaterMarkColumnName"/> is null. </exception>
         public HighWaterMarkChangeDetectionPolicy(string highWaterMarkColumnName)
         {
-            if (highWaterMarkColumnName == null)
-            {
-                throw new ArgumentNullException(nameof(highWaterMarkColumnName));
-            }
+            Argument.AssertNotNull(highWaterMarkColumnName, nameof(highWaterMarkColumnName));
 
             HighWaterMarkColumnName = highWaterMarkColumnName;
             ODataType = "#Microsoft.Azure.Search.HighWaterMarkChangeDetectionPolicy";
         }
 
         /// <summary> Initializes a new instance of HighWaterMarkChangeDetectionPolicy. </summary>
-        /// <param name="oDataType"> Identifies the concrete type of the data change detection policy. </param>
+        /// <param name="oDataType"> A URI fragment specifying the type of data change detection policy. </param>
         /// <param name="highWaterMarkColumnName"> The name of the high water mark column. </param>
         internal HighWaterMarkChangeDetectionPolicy(string oDataType, string highWaterMarkColumnName) : base(oDataType)
         {

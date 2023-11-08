@@ -7,7 +7,6 @@
 
 using System.Collections.Generic;
 using System.Text.Json;
-using Azure.Core;
 
 namespace Azure.ResourceManager.Sql.Models
 {
@@ -15,15 +14,19 @@ namespace Azure.ResourceManager.Sql.Models
     {
         internal static ServerUsageListResult DeserializeServerUsageListResult(JsonElement element)
         {
-            IReadOnlyList<ServerUsage> value = default;
+            if (element.ValueKind == JsonValueKind.Null)
+            {
+                return null;
+            }
+            IReadOnlyList<SqlServerUsage> value = default;
             foreach (var property in element.EnumerateObject())
             {
-                if (property.NameEquals("value"))
+                if (property.NameEquals("value"u8))
                 {
-                    List<ServerUsage> array = new List<ServerUsage>();
+                    List<SqlServerUsage> array = new List<SqlServerUsage>();
                     foreach (var item in property.Value.EnumerateArray())
                     {
-                        array.Add(ServerUsage.DeserializeServerUsage(item));
+                        array.Add(SqlServerUsage.DeserializeSqlServerUsage(item));
                     }
                     value = array;
                     continue;

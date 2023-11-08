@@ -14,8 +14,13 @@ namespace Azure.Identity.Tests.Mock
         internal Func<string[], string, string, AuthenticationAccount, ValueTask<AuthenticationResult>> SilentFactory { get; set; }
         internal Func<string[], string, string, string, AuthenticationResult> AuthcodeFactory { get; set; }
         internal Func<string[], string, UserAssertion, bool, CancellationToken, ValueTask<AuthenticationResult>> OnBehalfOfFactory { get; set; }
+        public Func<bool, IConfidentialClientApplication> ClientAppFactory { get; set; }
 
         public MockMsalConfidentialClient()
+        { }
+
+        public MockMsalConfidentialClient(CredentialPipeline pipeline, string tenantId, string clientId, string clientSecret, string redirectUrl, TokenCredentialOptions options)
+            : base(pipeline, tenantId, clientId, clientSecret, redirectUrl, options)
         { }
 
         public MockMsalConfidentialClient(AuthenticationResult result)
@@ -59,41 +64,64 @@ namespace Azure.Identity.Tests.Mock
             return this;
         }
 
-        public override ValueTask<AuthenticationResult> AcquireTokenForClientAsync(string[] scopes, string tenantId, bool async, CancellationToken cancellationToken)
+        public override ValueTask<AuthenticationResult> AcquireTokenForClientCoreAsync(string[] scopes, string tenantId, bool enableCae, bool async, CancellationToken cancellationToken)
         {
             return new(ClientFactory(scopes, tenantId));
         }
 
-        public override async ValueTask<AuthenticationResult> AcquireTokenSilentAsync(
+        public override async ValueTask<AuthenticationResult> AcquireTokenSilentCoreAsync(
             string[] scopes,
             AuthenticationAccount account,
             string tenantId,
             string replyUri,
+            bool enableCae,
             bool async,
             CancellationToken cancellationToken)
         {
             return await SilentFactory(scopes, tenantId, replyUri, account);
         }
 
-        public override ValueTask<AuthenticationResult> AcquireTokenByAuthorizationCodeAsync(
+        public override ValueTask<AuthenticationResult> AcquireTokenByAuthorizationCodeCoreAsync(
             string[] scopes,
             string code,
             string tenantId,
             string replyUri,
+            bool enableCae,
             bool async,
             CancellationToken cancellationToken)
         {
             return new(AuthcodeFactory(scopes, tenantId, replyUri, code));
         }
 
-        public override async ValueTask<AuthenticationResult> AcquireTokenOnBehalfOf(
+        public override async ValueTask<AuthenticationResult> AcquireTokenOnBehalfOfCoreAsync(
             string[] scopes,
             string tenantId,
             UserAssertion userAssertionValue,
+            bool enableCae,
             bool async,
             CancellationToken cancellationToken)
         {
             return await OnBehalfOfFactory(scopes, tenantId, userAssertionValue, async, cancellationToken);
+        }
+
+        internal ValueTask<IConfidentialClientApplication> CallCreateClientAsync(bool enableCae, bool async, CancellationToken cancellationToken)
+        {
+            return CreateClientAsync(enableCae, async, cancellationToken);
+        }
+
+        internal ValueTask<IConfidentialClientApplication> CallBaseGetClientAsync(bool enableCae, bool async, CancellationToken cancellationToken)
+        {
+            return GetClientAsync(enableCae, async, cancellationToken);
+        }
+
+        protected override ValueTask<IConfidentialClientApplication> CreateClientCoreAsync(bool enableCae, bool async, CancellationToken cancellationToken)
+        {
+            if (ClientAppFactory == null)
+            {
+                return base.CreateClientCoreAsync(enableCae, async, cancellationToken);
+            }
+
+            return new ValueTask<IConfidentialClientApplication>(ClientAppFactory(enableCae));
         }
     }
 }

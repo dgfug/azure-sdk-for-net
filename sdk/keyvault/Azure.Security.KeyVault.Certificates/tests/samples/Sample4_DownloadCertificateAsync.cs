@@ -14,7 +14,9 @@ namespace Azure.Security.KeyVault.Certificates.Samples
 {
     public partial class DownloadCertificate
     {
-#if !NET461
+// Need to exclude actual TFMs since SNIPPET is always passed during CIs, such that the following will fail:
+// NET472_OR_GREATER || NETSTANDARD2_1_OR_GREATER || SNIPPET
+#if !NET462 && !NET47
         [Test]
         public async Task DownloadCertificateAsync()
         {
@@ -38,12 +40,12 @@ namespace Azure.Security.KeyVault.Certificates.Samples
                 keyStorageFlags |= X509KeyStorageFlags.EphemeralKeySet;
             }
 
-            DownloadCertificateOptions options = new DownloadCertificateOptions
+            DownloadCertificateOptions options = new DownloadCertificateOptions(certificateName)
             {
                 KeyStorageFlags = keyStorageFlags
             };
 
-            using X509Certificate2 certificate = await client.DownloadCertificateAsync(certificateName, options: options);
+            using X509Certificate2 certificate = await client.DownloadCertificateAsync(options);
             using RSA key = certificate.GetRSAPrivateKey();
 
             byte[] signature = key.SignHash(hash, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);

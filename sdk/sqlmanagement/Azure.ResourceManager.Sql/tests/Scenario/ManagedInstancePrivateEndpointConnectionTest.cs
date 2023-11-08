@@ -10,14 +10,14 @@ using Azure.ResourceManager.Resources;
 using Azure.ResourceManager.Resources.Models;
 using NUnit.Framework;
 
-namespace Azure.ResourceManager.Sql.Tests.Scenario
+namespace Azure.ResourceManager.Sql.Tests
 {
-    public class ManagedInstancePrivateEndpointConnectionTest : SqlManagementClientBase
+    public class ManagedInstancePrivateEndpointConnectionTest : SqlManagementTestBase
     {
-        private ResourceGroup _resourceGroup;
+        private ResourceGroupResource _resourceGroup;
         private ResourceIdentifier _resourceGroupIdentifier;
         public ManagedInstancePrivateEndpointConnectionTest(bool isAsync)
-            : base(isAsync)
+            : base(isAsync)//, RecordedTestMode.Record)
         {
         }
 
@@ -25,7 +25,7 @@ namespace Azure.ResourceManager.Sql.Tests.Scenario
         public async Task GlobalSetUp()
         {
             var rgLro = await GlobalClient.GetDefaultSubscriptionAsync().Result.GetResourceGroups().CreateOrUpdateAsync(WaitUntil.Completed, SessionRecording.GenerateAssetName("Sql-RG-"), new ResourceGroupData(AzureLocation.WestUS2));
-            ResourceGroup rg = rgLro.Value;
+            ResourceGroupResource rg = rgLro.Value;
             _resourceGroupIdentifier = rg.Id;
             await StopSessionRecordingAsync();
         }
@@ -34,27 +34,22 @@ namespace Azure.ResourceManager.Sql.Tests.Scenario
         public async Task TestSetUp()
         {
             var client = GetArmClient();
-            _resourceGroup = await client.GetResourceGroup(_resourceGroupIdentifier).GetAsync();
+            _resourceGroup = await client.GetResourceGroupResource(_resourceGroupIdentifier).GetAsync();
         }
 
-        [Test]
-        [Ignore("Playback execution timeout")]
         [RecordedTest]
         public async Task ManagedInstancePrivateEndpointConnectioApiTests()
         {
             // Create Managed Instance
             string managedInstanceName = Recording.GenerateAssetName("managed-instance-");
-            string networkSecurityGroupName = Recording.GenerateAssetName("network-security-group-");
-            string routeTableName = Recording.GenerateAssetName("route-table-");
             string vnetName = Recording.GenerateAssetName("vnet-");
-            var managedInstance = await CreateDefaultManagedInstance(managedInstanceName, networkSecurityGroupName, routeTableName, vnetName, AzureLocation.WestUS2, _resourceGroup);
+            var managedInstance = await CreateDefaultManagedInstance(managedInstanceName, vnetName, AzureLocation.WestUS2, _resourceGroup);
             Assert.IsNotNull(managedInstance.Data);
 
             var collection = managedInstance.GetManagedInstancePrivateEndpointConnections();
 
             // Create Private endpoint
-            var vnet = _resourceGroup.GetVirtualNetworks().GetAllAsync().ToEnumerableAsync().Result.FirstOrDefault();
-            await CreateDefaultPrivateEndpoint(managedInstance, vnet, AzureLocation.WestUS2, _resourceGroup);
+            await CreateDefaultPrivateEndpoint(managedInstance, AzureLocation.WestUS2, _resourceGroup);
 
             // 1.GetAll
             var list = await collection.GetAllAsync().ToEnumerableAsync();
@@ -62,15 +57,12 @@ namespace Azure.ResourceManager.Sql.Tests.Scenario
             string privateEndpointName = list.FirstOrDefault().Data.Name;
 
             // 2.CheckIfExist
-            Assert.IsTrue(collection.Exists(privateEndpointName));
+            bool flag = await collection.ExistsAsync(privateEndpointName);
+            Assert.IsTrue(flag);
 
             // 3.Get
-            var getprivateEndpoint= await collection.GetAsync(privateEndpointName);
+            var getprivateEndpoint = await collection.GetAsync(privateEndpointName);
             Assert.IsNotNull(getprivateEndpoint.Value.Data);
-
-            // 4.GetAll
-            var getIfExistsprivateEndpoint = await collection.GetIfExistsAsync(privateEndpointName);
-            Assert.IsNotNull(getIfExistsprivateEndpoint.Value.Data);
         }
     }
 }

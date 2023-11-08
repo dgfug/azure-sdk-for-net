@@ -50,6 +50,12 @@ namespace Azure.Messaging.ServiceBus.Amqp
         public override Uri ServiceEndpoint { get; }
 
         /// <summary>
+        ///   The endpoint for the Service Bus service to be used when establishing the connection.
+        /// </summary>
+        ///
+        public Uri ConnectionEndpoint { get; }
+
+        /// <summary>
         ///   Gets the credential to use for authorization with the Service Bus service.
         /// </summary>
         ///
@@ -60,6 +66,11 @@ namespace Azure.Messaging.ServiceBus.Amqp
         /// </summary>
         ///
         private AmqpConnectionScope ConnectionScope { get; }
+
+        /// <summary>
+        ///    The converter to use for translating <see cref="ServiceBusMessage" /> into an AMQP-specific message.
+        /// </summary>
+        private readonly AmqpMessageConverter _messageConverter;
 
         /// <summary>
         ///   Initializes a new instance of the <see cref="AmqpClient"/> class.
@@ -87,20 +98,31 @@ namespace Azure.Messaging.ServiceBus.Amqp
             Argument.AssertNotNull(credential, nameof(credential));
             Argument.AssertNotNull(options, nameof(options));
 
+            _messageConverter = AmqpMessageConverter.Default;
+
             ServiceEndpoint = new UriBuilder
             {
                 Scheme = options.TransportType.GetUriScheme(),
                 Host = host
             }.Uri;
 
+            ConnectionEndpoint = (options.CustomEndpointAddress == null) ? ServiceEndpoint : new UriBuilder
+            {
+                Scheme = ServiceEndpoint.Scheme,
+                Host = options.CustomEndpointAddress.Host
+            }.Uri;
+
             Credential = credential;
+
             ConnectionScope = new AmqpConnectionScope(
                 ServiceEndpoint,
+                ConnectionEndpoint,
                 credential,
                 options.TransportType,
                 options.WebProxy,
                 options.EnableCrossEntityTransactions,
-                options.RetryOptions.TryTimeout);
+                options.RetryOptions.TryTimeout,
+                options.ConnectionIdleTimeout);
         }
 
         /// <summary>
@@ -125,7 +147,8 @@ namespace Azure.Messaging.ServiceBus.Amqp
                 entityPath,
                 ConnectionScope,
                 retryPolicy,
-                identifier
+                identifier,
+                _messageConverter
             );
         }
 
@@ -168,6 +191,7 @@ namespace Azure.Messaging.ServiceBus.Amqp
                 sessionId,
                 isSessionReceiver,
                 isProcessor,
+                _messageConverter,
                 cancellationToken
             );
         }

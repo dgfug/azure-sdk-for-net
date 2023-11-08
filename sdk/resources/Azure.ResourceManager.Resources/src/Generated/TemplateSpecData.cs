@@ -13,19 +13,16 @@ using Azure.ResourceManager.Resources.Models;
 
 namespace Azure.ResourceManager.Resources
 {
-    /// <summary> A class representing the TemplateSpec data model. </summary>
+    /// <summary>
+    /// A class representing the TemplateSpec data model.
+    /// Template Spec object.
+    /// </summary>
     public partial class TemplateSpecData : ResourceData
     {
         /// <summary> Initializes a new instance of TemplateSpecData. </summary>
         /// <param name="location"> The location of the Template Spec. It cannot be changed after Template Spec creation. It must be one of the supported Azure locations. </param>
-        /// <exception cref="ArgumentNullException"> <paramref name="location"/> is null. </exception>
-        public TemplateSpecData(string location)
+        public TemplateSpecData(AzureLocation location)
         {
-            if (location == null)
-            {
-                throw new ArgumentNullException(nameof(location));
-            }
-
             Location = location;
             Tags = new ChangeTrackingDictionary<string, string>();
             Versions = new ChangeTrackingDictionary<string, TemplateSpecVersionInfo>();
@@ -41,8 +38,8 @@ namespace Azure.ResourceManager.Resources
         /// <param name="description"> Template Spec description. </param>
         /// <param name="displayName"> Template Spec display name. </param>
         /// <param name="metadata"> The Template Spec metadata. Metadata is an open-ended object and is typically a collection of key-value pairs. </param>
-        /// <param name="versions"> High-level information about the versions within this Template Spec. The keys are the version names. Only populated if the $expand query parameter is set to &apos;versions&apos;. </param>
-        internal TemplateSpecData(ResourceIdentifier id, string name, ResourceType resourceType, SystemData systemData, string location, IDictionary<string, string> tags, string description, string displayName, object metadata, IReadOnlyDictionary<string, TemplateSpecVersionInfo> versions) : base(id, name, resourceType, systemData)
+        /// <param name="versions"> High-level information about the versions within this Template Spec. The keys are the version names. Only populated if the $expand query parameter is set to 'versions'. </param>
+        internal TemplateSpecData(ResourceIdentifier id, string name, ResourceType resourceType, SystemData systemData, AzureLocation location, IDictionary<string, string> tags, string description, string displayName, BinaryData metadata, IReadOnlyDictionary<string, TemplateSpecVersionInfo> versions) : base(id, name, resourceType, systemData)
         {
             Location = location;
             Tags = tags;
@@ -53,16 +50,45 @@ namespace Azure.ResourceManager.Resources
         }
 
         /// <summary> The location of the Template Spec. It cannot be changed after Template Spec creation. It must be one of the supported Azure locations. </summary>
-        public string Location { get; set; }
+        public AzureLocation Location { get; set; }
         /// <summary> Resource tags. </summary>
         public IDictionary<string, string> Tags { get; }
         /// <summary> Template Spec description. </summary>
         public string Description { get; set; }
         /// <summary> Template Spec display name. </summary>
         public string DisplayName { get; set; }
-        /// <summary> The Template Spec metadata. Metadata is an open-ended object and is typically a collection of key-value pairs. </summary>
-        public object Metadata { get; set; }
-        /// <summary> High-level information about the versions within this Template Spec. The keys are the version names. Only populated if the $expand query parameter is set to &apos;versions&apos;. </summary>
+        /// <summary>
+        /// The Template Spec metadata. Metadata is an open-ended object and is typically a collection of key-value pairs.
+        /// <para>
+        /// To assign an object to this property use <see cref="BinaryData.FromObjectAsJson{T}(T, System.Text.Json.JsonSerializerOptions?)"/>.
+        /// </para>
+        /// <para>
+        /// To assign an already formatted json string to this property use <see cref="BinaryData.FromString(string)"/>.
+        /// </para>
+        /// <para>
+        /// Examples:
+        /// <list type="bullet">
+        /// <item>
+        /// <term>BinaryData.FromObjectAsJson("foo")</term>
+        /// <description>Creates a payload of "foo".</description>
+        /// </item>
+        /// <item>
+        /// <term>BinaryData.FromString("\"foo\"")</term>
+        /// <description>Creates a payload of "foo".</description>
+        /// </item>
+        /// <item>
+        /// <term>BinaryData.FromObjectAsJson(new { key = "value" })</term>
+        /// <description>Creates a payload of { "key": "value" }.</description>
+        /// </item>
+        /// <item>
+        /// <term>BinaryData.FromString("{\"key\": \"value\"}")</term>
+        /// <description>Creates a payload of { "key": "value" }.</description>
+        /// </item>
+        /// </list>
+        /// </para>
+        /// </summary>
+        public BinaryData Metadata { get; set; }
+        /// <summary> High-level information about the versions within this Template Spec. The keys are the version names. Only populated if the $expand query parameter is set to 'versions'. </summary>
         public IReadOnlyDictionary<string, TemplateSpecVersionInfo> Versions { get; }
     }
 }

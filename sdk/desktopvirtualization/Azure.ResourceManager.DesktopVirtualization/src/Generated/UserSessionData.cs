@@ -12,7 +12,10 @@ using Azure.ResourceManager.Models;
 
 namespace Azure.ResourceManager.DesktopVirtualization
 {
-    /// <summary> A class representing the UserSession data model. </summary>
+    /// <summary>
+    /// A class representing the UserSession data model.
+    /// Represents a UserSession definition.
+    /// </summary>
     public partial class UserSessionData : ResourceData
     {
         /// <summary> Initializes a new instance of UserSessionData. </summary>
@@ -30,15 +33,15 @@ namespace Azure.ResourceManager.DesktopVirtualization
         /// <param name="applicationType"> Application type of application. </param>
         /// <param name="sessionState"> State of user session. </param>
         /// <param name="activeDirectoryUserName"> The active directory user name. </param>
-        /// <param name="createTime"> The timestamp of the user session create. </param>
-        internal UserSessionData(ResourceIdentifier id, string name, ResourceType resourceType, SystemData systemData, string objectId, string userPrincipalName, ApplicationType? applicationType, SessionState? sessionState, string activeDirectoryUserName, DateTimeOffset? createTime) : base(id, name, resourceType, systemData)
+        /// <param name="createOn"> The timestamp of the user session create. </param>
+        internal UserSessionData(ResourceIdentifier id, string name, ResourceType resourceType, SystemData systemData, string objectId, string userPrincipalName, VirtualApplicationType? applicationType, UserSessionState? sessionState, string activeDirectoryUserName, DateTimeOffset? createOn) : base(id, name, resourceType, systemData)
         {
             ObjectId = objectId;
             UserPrincipalName = userPrincipalName;
             ApplicationType = applicationType;
             SessionState = sessionState;
             ActiveDirectoryUserName = activeDirectoryUserName;
-            CreateTime = createTime;
+            CreateOn = createOn;
         }
 
         /// <summary> ObjectId of user session. (internal use). </summary>
@@ -46,12 +49,12 @@ namespace Azure.ResourceManager.DesktopVirtualization
         /// <summary> The user principal name. </summary>
         public string UserPrincipalName { get; set; }
         /// <summary> Application type of application. </summary>
-        public ApplicationType? ApplicationType { get; set; }
+        public VirtualApplicationType? ApplicationType { get; set; }
         /// <summary> State of user session. </summary>
-        public SessionState? SessionState { get; set; }
+        public UserSessionState? SessionState { get; set; }
         /// <summary> The active directory user name. </summary>
         public string ActiveDirectoryUserName { get; set; }
         /// <summary> The timestamp of the user session create. </summary>
-        public DateTimeOffset? CreateTime { get; set; }
+        public DateTimeOffset? CreateOn { get; set; }
     }
 }

@@ -5,6 +5,7 @@
 
 #nullable disable
 
+using System;
 using System.Text.Json;
 using Azure.Core;
 
@@ -14,17 +15,20 @@ namespace Azure.ResourceManager.Resources.Models
     {
         internal static HttpMessage DeserializeHttpMessage(JsonElement element)
         {
-            Optional<object> content = default;
+            if (element.ValueKind == JsonValueKind.Null)
+            {
+                return null;
+            }
+            Optional<BinaryData> content = default;
             foreach (var property in element.EnumerateObject())
             {
-                if (property.NameEquals("content"))
+                if (property.NameEquals("content"u8))
                 {
                     if (property.Value.ValueKind == JsonValueKind.Null)
                     {
-                        property.ThrowNonNullablePropertyIsNull();
                         continue;
                     }
-                    content = property.Value.GetObject();
+                    content = BinaryData.FromString(property.Value.GetRawText());
                     continue;
                 }
             }

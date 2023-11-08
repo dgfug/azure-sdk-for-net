@@ -9,11 +9,15 @@ using System.Collections.Generic;
 using Azure.Core;
 using Azure.ResourceManager.AppService.Models;
 using Azure.ResourceManager.Models;
+using Azure.ResourceManager.Resources.Models;
 
 namespace Azure.ResourceManager.AppService
 {
-    /// <summary> A class representing the KubeEnvironment data model. </summary>
-    public partial class KubeEnvironmentData : AppServiceResource
+    /// <summary>
+    /// A class representing the KubeEnvironment data model.
+    /// A Kubernetes cluster specialized for web workloads by Azure App Service
+    /// </summary>
+    public partial class KubeEnvironmentData : TrackedResourceData
     {
         /// <summary> Initializes a new instance of KubeEnvironmentData. </summary>
         /// <param name="location"> The location. </param>
@@ -28,13 +32,12 @@ namespace Azure.ResourceManager.AppService
         /// <param name="systemData"> The systemData. </param>
         /// <param name="tags"> The tags. </param>
         /// <param name="location"> The location. </param>
-        /// <param name="kind"> Kind of resource. </param>
         /// <param name="extendedLocation"> Extended Location. </param>
         /// <param name="provisioningState"> Provisioning state of the Kubernetes Environment. </param>
         /// <param name="deploymentErrors"> Any errors that occurred during deployment or deployment validation. </param>
-        /// <param name="internalLoadBalancerEnabled"> Only visible within Vnet/Subnet. </param>
+        /// <param name="isInternalLoadBalancerEnabled"> Only visible within Vnet/Subnet. </param>
         /// <param name="defaultDomain"> Default Domain Name for the cluster. </param>
-        /// <param name="staticIp"> Static IP of the KubeEnvironment. </param>
+        /// <param name="staticIP"> Static IP of the KubeEnvironment. </param>
         /// <param name="arcConfiguration">
         /// Cluster configuration which determines the ARC cluster
         /// components types. Eg: Choosing between BuildService kind,
@@ -42,21 +45,23 @@ namespace Azure.ResourceManager.AppService
         /// </param>
         /// <param name="appLogsConfiguration">
         /// Cluster configuration which enables the log daemon to export
-        /// app logs to a destination. Currently only &quot;log-analytics&quot; is
+        /// app logs to a destination. Currently only "log-analytics" is
         /// supported
         /// </param>
-        /// <param name="aksResourceID"></param>
-        internal KubeEnvironmentData(ResourceIdentifier id, string name, ResourceType resourceType, SystemData systemData, IDictionary<string, string> tags, AzureLocation location, string kind, ExtendedLocation extendedLocation, KubeEnvironmentProvisioningState? provisioningState, string deploymentErrors, bool? internalLoadBalancerEnabled, string defaultDomain, string staticIp, ArcConfiguration arcConfiguration, AppLogsConfiguration appLogsConfiguration, string aksResourceID) : base(id, name, resourceType, systemData, tags, location, kind)
+        /// <param name="aksResourceId"></param>
+        /// <param name="kind"> Kind of resource. </param>
+        internal KubeEnvironmentData(ResourceIdentifier id, string name, ResourceType resourceType, SystemData systemData, IDictionary<string, string> tags, AzureLocation location, ExtendedLocation extendedLocation, KubeEnvironmentProvisioningState? provisioningState, string deploymentErrors, bool? isInternalLoadBalancerEnabled, string defaultDomain, string staticIP, ArcConfiguration arcConfiguration, AppLogsConfiguration appLogsConfiguration, ResourceIdentifier aksResourceId, string kind) : base(id, name, resourceType, systemData, tags, location)
         {
             ExtendedLocation = extendedLocation;
             ProvisioningState = provisioningState;
             DeploymentErrors = deploymentErrors;
-            InternalLoadBalancerEnabled = internalLoadBalancerEnabled;
+            IsInternalLoadBalancerEnabled = isInternalLoadBalancerEnabled;
             DefaultDomain = defaultDomain;
-            StaticIp = staticIp;
+            StaticIP = staticIP;
             ArcConfiguration = arcConfiguration;
             AppLogsConfiguration = appLogsConfiguration;
-            AksResourceID = aksResourceID;
+            AksResourceId = aksResourceId;
+            Kind = kind;
         }
 
         /// <summary> Extended Location. </summary>
@@ -66,11 +71,11 @@ namespace Azure.ResourceManager.AppService
         /// <summary> Any errors that occurred during deployment or deployment validation. </summary>
         public string DeploymentErrors { get; }
         /// <summary> Only visible within Vnet/Subnet. </summary>
-        public bool? InternalLoadBalancerEnabled { get; set; }
+        public bool? IsInternalLoadBalancerEnabled { get; set; }
         /// <summary> Default Domain Name for the cluster. </summary>
         public string DefaultDomain { get; }
         /// <summary> Static IP of the KubeEnvironment. </summary>
-        public string StaticIp { get; set; }
+        public string StaticIP { get; set; }
         /// <summary>
         /// Cluster configuration which determines the ARC cluster
         /// components types. Eg: Choosing between BuildService kind,
@@ -79,11 +84,13 @@ namespace Azure.ResourceManager.AppService
         public ArcConfiguration ArcConfiguration { get; set; }
         /// <summary>
         /// Cluster configuration which enables the log daemon to export
-        /// app logs to a destination. Currently only &quot;log-analytics&quot; is
+        /// app logs to a destination. Currently only "log-analytics" is
         /// supported
         /// </summary>
         public AppLogsConfiguration AppLogsConfiguration { get; set; }
         /// <summary> Gets or sets the aks resource id. </summary>
-        public string AksResourceID { get; set; }
+        public ResourceIdentifier AksResourceId { get; set; }
+        /// <summary> Kind of resource. </summary>
+        public string Kind { get; set; }
     }
 }

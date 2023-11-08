@@ -5,7 +5,6 @@
 
 using System.Collections.Generic;
 using Azure.Core;
-using Azure.ResourceManager.Core;
 
 [assembly: CodeGenSuppressType("TrackedResource")]
 namespace Azure.ResourceManager.Models
@@ -35,6 +34,13 @@ namespace Azure.ResourceManager.Models
         {
             Tags = tags;
             Location = location;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of <see cref="TrackedResourceData"/> for deserialization.
+        /// </summary>
+        protected TrackedResourceData()
+        {
         }
 
         /// <summary> Resource tags. </summary>

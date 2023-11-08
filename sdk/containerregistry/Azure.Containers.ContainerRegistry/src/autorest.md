@@ -6,10 +6,9 @@ Run `dotnet build /t:GenerateCode` to generate code.
 title: Container Registry
 input-file:
  - https://github.com/Azure/azure-rest-api-specs/blob/c8d9a26a2857828e095903efa72512cf3a76c15d/specification/containerregistry/data-plane/Azure.ContainerRegistry/stable/2021-07-01/containerregistry.json
- 
+
 model-namespace: false
-modelerfour:
-    seal-single-value-enum-by-default: true
+generation1-convenience-client: true
 ```
 
 ## Customizations for Code Generator
@@ -66,4 +65,131 @@ directive:
     where: $.definitions.ManifestAttributesBase
     transform: >
       delete $.properties.configMediaType
+```
+
+# Add content-type parameter to upload manifest
+``` yaml
+directive:
+    from: swagger-document
+    where: $.paths["/v2/{name}/manifests/{reference}"].put
+    transform: >
+        $.parameters.push({
+            "name": "Content-Type",
+            "in": "header",
+            "type": "string",
+            "description": "The manifest's Content-Type."
+        });
+        delete $.responses["201"].schema;
+```
+
+# Change NextLink client name to nextLink
+``` yaml
+directive:
+  from: swagger-document
+  where: $.parameters.NextLink
+  transform: >
+    $["x-ms-client-name"] = "nextLink"
+```
+
+# Updates to OciImageManifest
+``` yaml
+directive:
+  from: swagger-document
+  where: $.definitions.OCIManifest
+  transform: >
+    $["x-csharp-usage"] = "model,input,output,converter";
+    $["x-csharp-formats"] = "json";
+    $["x-ms-client-name"] = "OciImageManifest";
+    $["required"] = ["schemaVersion"];
+    delete $["x-accessibility"];
+    delete $["allOf"];
+    $.properties["schemaVersion"] = {
+          "type": "integer",
+          "description": "Schema version"
+        };
+    $.properties.config["x-ms-client-name"] = "configuration";
+```
+
+# Take stream as manifest body
+``` yaml
+directive:
+  from: swagger-document
+  where: $.parameters.ManifestBody
+  transform: >
+    $.schema = {
+        "type": "string",
+        "format": "binary"
+      }
+```
+
+# Descriptor Updates
+``` yaml
+directive:
+  from: swagger-document
+  where: $.definitions.Descriptor
+  transform: >
+    $["x-ms-client-name"] = "OciDescriptor";
+    $.properties.size["x-ms-client-name"] = "sizeInBytes";
+    delete $["x-accessibility"]
+```
+
+# Make OciAnnotations a public type
+``` yaml
+directive:
+  from: swagger-document
+  where: $.definitions.Annotations
+  transform: >
+    delete $["x-accessibility"]
+```
+
+# Remove security definitions
+``` yaml
+directive:
+- from: swagger-document
+  where: $.
+  transform: >
+    delete $["securityDefinitions"];
+    delete $["security"];
+```
+
+# Remove stream response from `deleteBlob`
+
+```yaml
+directive:
+  - from: swagger-document
+    where: $.paths["/v2/{name}/blobs/{digest}"]["delete"]
+    transform: >
+      delete $.responses["202"].schema;
+```
+
+# Add content-range and content-length parameters to upload chunk
+<!--.NET specific -->
+
+``` yaml
+directive:
+    from: swagger-document
+    where: $.paths["/{nextBlobUuidLink}"].patch
+    transform: >
+        $.parameters.push({
+            "name": "Content-Range",
+            "in": "header",
+            "type": "string",
+            "description": "Range of bytes identifying the desired block of content represented by the body. Start must the end offset retrieved via status check plus one. Note that this is a non-standard use of the Content-Range header."
+        });
+        $.parameters.push({
+            "name": "Content-Length",
+            "in": "header",
+            "type": "string",
+            "description": "Length of the chunk being uploaded, corresponding the length of the request body."
+        });
+```
+
+# Don't buffer downloads
+<!--.NET specific -->
+
+``` yaml
+directive:
+- from: swagger-document
+  where: $..[?(@.operationId=='ContainerRegistryBlob_GetBlob' || @.operationId=='ContainerRegistryBlob_GetChunk')]
+  transform: $["x-csharp-buffer-response"] = false;
 ```

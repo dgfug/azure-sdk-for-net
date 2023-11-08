@@ -7,7 +7,6 @@
 
 using System.Collections.Generic;
 using System.Text.Json;
-using Azure.Core;
 
 namespace Azure.ResourceManager.Sql.Models
 {
@@ -15,10 +14,14 @@ namespace Azure.ResourceManager.Sql.Models
     {
         internal static ElasticPoolActivityListResult DeserializeElasticPoolActivityListResult(JsonElement element)
         {
+            if (element.ValueKind == JsonValueKind.Null)
+            {
+                return null;
+            }
             IReadOnlyList<ElasticPoolActivity> value = default;
             foreach (var property in element.EnumerateObject())
             {
-                if (property.NameEquals("value"))
+                if (property.NameEquals("value"u8))
                 {
                     List<ElasticPoolActivity> array = new List<ElasticPoolActivity>();
                     foreach (var item in property.Value.EnumerateArray())

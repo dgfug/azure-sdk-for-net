@@ -12,14 +12,15 @@ using NUnit.Framework;
 
 namespace Azure.ResourceManager.Compute.Tests
 {
+    [ClientTestFixture(true, "2022-08-01", "2021-04-01", "2020-06-01", "2022-11-01", "2023-03-01", "2023-07-01")]
     public class AvailabilitySetOperationsTests : ComputeTestBase
     {
-        public AvailabilitySetOperationsTests(bool isAsync)
-            : base(isAsync)//, RecordedTestMode.Record)
+        public AvailabilitySetOperationsTests(bool isAsync, string apiVersion)
+            : base(isAsync, AvailabilitySetResource.ResourceType, apiVersion)//, RecordedTestMode.Record)
         {
         }
 
-        private async Task<AvailabilitySet> CreateAvailabilitySetAsync(string setName)
+        private async Task<AvailabilitySetResource> CreateAvailabilitySetAsync(string setName)
         {
             var collection = (await CreateResourceGroupAsync()).GetAvailabilitySets();
             var input = ResourceDataHelper.GetBasicAvailabilitySetData(DefaultLocation);
@@ -46,7 +47,7 @@ namespace Azure.ResourceManager.Compute.Tests
         {
             var setName = Recording.GenerateAssetName("testAS-");
             var set1 = await CreateAvailabilitySetAsync(setName);
-            AvailabilitySet set2 = await set1.GetAsync();
+            AvailabilitySetResource set2 = await set1.GetAsync();
 
             ResourceDataHelper.AssertAvailabilitySet(set1.Data, set2.Data);
         }
@@ -58,11 +59,11 @@ namespace Azure.ResourceManager.Compute.Tests
             var setName = Recording.GenerateAssetName("testAS-");
             var set = await CreateAvailabilitySetAsync(setName);
             var updatedPlatformFaultDomainCount = 3;
-            var update = new PatchableAvailabilitySetData()
+            var update = new AvailabilitySetPatch()
             {
                 PlatformFaultDomainCount = updatedPlatformFaultDomainCount
             };
-            AvailabilitySet updatedSet = await set.UpdateAsync(update);
+            AvailabilitySetResource updatedSet = await set.UpdateAsync(update);
 
             Assert.AreEqual(updatedPlatformFaultDomainCount, updatedSet.Data.PlatformFaultDomainCount);
         }
@@ -73,21 +74,21 @@ namespace Azure.ResourceManager.Compute.Tests
             var setName = Recording.GenerateAssetName("testAS-");
             var set = await CreateAvailabilitySetAsync(setName);
             var locations = await set.GetAvailableLocationsAsync();
-            Assert.IsNotEmpty(locations);
+            Assert.IsNotEmpty(locations.Value);
         }
 
         [RecordedTest]
         public async Task PlacementGroupId()
         {
             var asetName = Recording.GenerateAssetName("aset-");
-            AvailabilitySet aset = await CreateAvailabilitySetAsync(asetName);
+            AvailabilitySetResource aset = await CreateAvailabilitySetAsync(asetName);
             var beforeAdd = aset.Data.ProximityPlacementGroupId;
 
-            ResourceGroup rg = Client.GetResourceGroup(ResourceGroup.CreateResourceIdentifier(aset.Id.SubscriptionId, aset.Id.ResourceGroupName));
+            ResourceGroupResource rg = Client.GetResourceGroupResource(ResourceGroupResource.CreateResourceIdentifier(aset.Id.SubscriptionId, aset.Id.ResourceGroupName));
             var proxGrpName = Recording.GenerateAssetName("proxGrp-");
-            ProximityPlacementGroup proxGrp = (await rg.GetProximityPlacementGroups().CreateOrUpdateAsync(WaitUntil.Completed, proxGrpName, new ProximityPlacementGroupData(DefaultLocation))).Value;
+            ProximityPlacementGroupResource proxGrp = (await rg.GetProximityPlacementGroups().CreateOrUpdateAsync(WaitUntil.Completed, proxGrpName, new ProximityPlacementGroupData(DefaultLocation))).Value;
 
-            PatchableAvailabilitySetData updateOptions = new PatchableAvailabilitySetData();
+            AvailabilitySetPatch updateOptions = new AvailabilitySetPatch();
             updateOptions.ProximityPlacementGroupId = proxGrp.Id;
             aset = await aset.UpdateAsync(updateOptions);
             var addIdResult = aset.Data.ProximityPlacementGroupId;
@@ -97,10 +98,10 @@ namespace Azure.ResourceManager.Compute.Tests
             var removeIdResult = aset.Data.ProximityPlacementGroupId;
 
             var asetName2 = Recording.GenerateAssetName("aset-");
-            AvailabilitySet aset2 = await CreateAvailabilitySetAsync(asetName2);
+            AvailabilitySetResource aset2 = await CreateAvailabilitySetAsync(asetName2);
             var newBeforeAdd = aset2.Data.ProximityPlacementGroup?.Id;
 
-            PatchableAvailabilitySetData updateOptions2 = new PatchableAvailabilitySetData();
+            AvailabilitySetPatch updateOptions2 = new AvailabilitySetPatch();
             updateOptions2.ProximityPlacementGroup = new Resources.Models.WritableSubResource();
             updateOptions2.ProximityPlacementGroup.Id = proxGrp.Id;
             aset2 = await aset2.UpdateAsync(updateOptions2);
@@ -122,6 +123,25 @@ namespace Azure.ResourceManager.Compute.Tests
             Assert.AreEqual(addIdResult, newAddIdResult);
             Assert.AreEqual(removeIdResult, newRemoveIdResult);
             Assert.AreEqual(removeIdResult, newRemoveOuterIdResult);
+        }
+
+        [RecordedTest]
+        [TestCase(null)]
+        [TestCase(true)]
+        [TestCase(false)]
+        [Ignore("https://github.com/Azure/azure-sdk-for-net/issues/36714")]
+        public async Task SetTags(bool? useTagResource)
+        {
+            SetTagResourceUsage(Client, useTagResource);
+            var name = Recording.GenerateAssetName("aset-");
+            var aset = await CreateAvailabilitySetAsync(name);
+            var tags = new Dictionary<string, string>()
+            {
+                { "key", "value" }
+            };
+            AvailabilitySetResource updated = await aset.SetTagsAsync(tags);
+
+            Assert.AreEqual(tags, updated.Data.Tags);
         }
     }
 }

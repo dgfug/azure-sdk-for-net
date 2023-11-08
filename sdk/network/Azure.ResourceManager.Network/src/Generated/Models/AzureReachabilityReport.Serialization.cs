@@ -7,7 +7,6 @@
 
 using System.Collections.Generic;
 using System.Text.Json;
-using Azure.Core;
 
 namespace Azure.ResourceManager.Network.Models
 {
@@ -15,22 +14,26 @@ namespace Azure.ResourceManager.Network.Models
     {
         internal static AzureReachabilityReport DeserializeAzureReachabilityReport(JsonElement element)
         {
+            if (element.ValueKind == JsonValueKind.Null)
+            {
+                return null;
+            }
             string aggregationLevel = default;
             AzureReachabilityReportLocation providerLocation = default;
             IReadOnlyList<AzureReachabilityReportItem> reachabilityReport = default;
             foreach (var property in element.EnumerateObject())
             {
-                if (property.NameEquals("aggregationLevel"))
+                if (property.NameEquals("aggregationLevel"u8))
                 {
                     aggregationLevel = property.Value.GetString();
                     continue;
                 }
-                if (property.NameEquals("providerLocation"))
+                if (property.NameEquals("providerLocation"u8))
                 {
                     providerLocation = AzureReachabilityReportLocation.DeserializeAzureReachabilityReportLocation(property.Value);
                     continue;
                 }
-                if (property.NameEquals("reachabilityReport"))
+                if (property.NameEquals("reachabilityReport"u8))
                 {
                     List<AzureReachabilityReportItem> array = new List<AzureReachabilityReportItem>();
                     foreach (var item in property.Value.EnumerateArray())

@@ -14,16 +14,18 @@ namespace Azure.Security.KeyVault.Certificates.Samples
 {
     public partial class DownloadCertificate
     {
-#if !NET461
+// Need to exclude actual TFMs since SNIPPET is always passed during CIs, such that the following will fail:
+// NET472_OR_GREATER || NETSTANDARD2_1_OR_GREATER || SNIPPET
+#if !NET462 && !NET47
         [Test]
         public void DownloadCertificateSync()
         {
             // Environment variable with the Key Vault endpoint.
             string keyVaultUrl = TestEnvironment.KeyVaultUrl;
 
-#region Snippet:CertificatesSample4CertificateClient
+        #region Snippet:CertificatesSample4CertificateClient
             CertificateClient client = new CertificateClient(new Uri(keyVaultUrl), new DefaultAzureCredential());
-#endregion
+        #endregion
 
             string certificateName = $"rsa-{Guid.NewGuid()}";
             CertificateOperation operation = client.StartCreateCertificate(certificateName, CertificatePolicy.Default);
@@ -38,33 +40,33 @@ namespace Azure.Security.KeyVault.Certificates.Samples
             byte[] data = Encoding.UTF8.GetBytes("test");
             byte[] hash = sha.ComputeHash(data);
 
-            #region Snippet:CertificatesSample4DownloadCertificate
+        #region Snippet:CertificatesSample4DownloadCertificate
             X509KeyStorageFlags keyStorageFlags = X509KeyStorageFlags.MachineKeySet;
             if (!RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
                 keyStorageFlags |= X509KeyStorageFlags.EphemeralKeySet;
             }
 
-            DownloadCertificateOptions options = new DownloadCertificateOptions
+            DownloadCertificateOptions options = new DownloadCertificateOptions(certificateName)
             {
                 KeyStorageFlags = keyStorageFlags
             };
 
-            using X509Certificate2 certificate = client.DownloadCertificate(certificateName, options: options);
+            using X509Certificate2 certificate = client.DownloadCertificate(options);
             using RSA key = certificate.GetRSAPrivateKey();
 
             byte[] signature = key.SignHash(hash, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
             Debug.WriteLine($"Signature: {Convert.ToBase64String(signature)}");
-            #endregion
+        #endregion
 
-            #region Snippet:CertificatesSample4PublicKey
+        #region Snippet:CertificatesSample4PublicKey
             Response<KeyVaultCertificateWithPolicy> certificateResponse = client.GetCertificate(certificateName);
             using X509Certificate2 publicCertificate = new X509Certificate2(certificateResponse.Value.Cer);
             using RSA publicKey = publicCertificate.GetRSAPublicKey();
 
             bool verified = publicKey.VerifyHash(hash, signature, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
             Debug.WriteLine($"Signature verified: {verified}");
-            #endregion
+        #endregion
 
             Assert.IsTrue(verified);
 

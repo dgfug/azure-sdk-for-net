@@ -9,7 +9,6 @@ using Azure.ResourceManager.Resources;
 using Azure.Core.TestFramework;
 using Azure.ResourceManager.EventHubs.Models;
 using Azure.ResourceManager.EventHubs;
-using Azure.ResourceManager.EventHubs.Tests.Helpers;
 using Azure.ResourceManager.Resources.Models;
 using Azure.Core;
 
@@ -17,7 +16,7 @@ namespace Azure.ResourceManager.EventHubs.Tests
 {
     public class EventHubClusterTests : EventHubTestBase
     {
-        private ResourceGroup _resourceGroup;
+        private ResourceGroupResource _resourceGroup;
         public EventHubClusterTests(bool isAsync) : base(isAsync)
         {
         }
@@ -32,7 +31,7 @@ namespace Azure.ResourceManager.EventHubs.Tests
                 return;
             }
 
-            Assert.Fail($"{nameof(SubscriptionExtensions)}.{nameof(SubscriptionExtensions.GetAvailableClusterRegionClustersAsync)} has returned an empty collection of AvailableClusters.");
+            Assert.Fail($"{nameof(EventHubsExtensions)}.{nameof(EventHubsExtensions.GetAvailableClusterRegionClustersAsync)} has returned an empty collection of AvailableClusters.");
         }
 
         [Test]
@@ -43,9 +42,9 @@ namespace Azure.ResourceManager.EventHubs.Tests
             //create a cluster
             _resourceGroup = await CreateResourceGroupAsync();
             string clusterName = Recording.GenerateAssetName("cluster");
-            EventHubClusterCollection clusterCollection = _resourceGroup.GetEventHubClusters();
-            EventHubClusterData parameter = new EventHubClusterData(AzureLocation.EastUS2);
-            EventHubCluster cluster = (await clusterCollection.CreateOrUpdateAsync(WaitUntil.Completed, clusterName, parameter)).Value;
+            EventHubsClusterCollection clusterCollection = _resourceGroup.GetEventHubsClusters();
+            EventHubsClusterData parameter = new EventHubsClusterData(AzureLocation.EastUS2);
+            EventHubsClusterResource cluster = (await clusterCollection.CreateOrUpdateAsync(WaitUntil.Completed, clusterName, parameter)).Value;
             Assert.NotNull(cluster);
             Assert.AreEqual(cluster.Data.Name, clusterName);
 
@@ -65,9 +64,9 @@ namespace Azure.ResourceManager.EventHubs.Tests
             Assert.NotNull(subResource);
 
             //update the cluster
-            cluster.Data.Tags.Add("key", "value");
+            cluster.Data.Tags.Add("key1", "value1");
             cluster = (await cluster.UpdateAsync(WaitUntil.Completed, cluster.Data)).Value;
-            Assert.AreEqual(cluster.Data.Tags["key"], "value");
+            Assert.AreEqual(cluster.Data.Tags["key1"], "value1");
 
             //delete the cluster
             await cluster.DeleteAsync(WaitUntil.Completed);

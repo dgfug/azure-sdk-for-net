@@ -1,12 +1,11 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
 using Azure.Core;
 using Azure.Core.Pipeline;
 using Microsoft.Identity.Client;
 using System;
-using System.Collections.Generic;
-using System.IO;
+using System.ComponentModel;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
@@ -14,14 +13,16 @@ using System.Threading.Tasks;
 namespace Azure.Identity
 {
     /// <summary>
-    /// Enables authentication of a service principal in to Azure Active Directory using a X509 certificate that is assigned to it's App Registration. More information
+    /// Enables authentication of a service principal to Microsoft Entra ID using a X509 certificate that is assigned to it's App Registration. More information
     /// on how to configure certificate authentication can be found here:
-    /// https://docs.microsoft.com/azure/active-directory/develop/active-directory-certificate-credentials#register-your-certificate-with-azure-ad
+    /// https://learn.microsoft.com/azure/active-directory/develop/active-directory-certificate-credentials#register-your-certificate-with-azure-ad
     /// </summary>
     public class ClientCertificateCredential : TokenCredential
     {
+        internal const string Troubleshooting = "See the troubleshooting guide for more information. https://aka.ms/azsdk/net/identity/clientcertificatecredential/troubleshoot";
+
         /// <summary>
-        /// Gets the Azure Active Directory tenant (directory) Id of the service principal
+        /// Gets the Microsoft Entra tenant (directory) ID of the service principal
         /// </summary>
         internal string TenantId { get; }
 
@@ -36,6 +37,8 @@ namespace Azure.Identity
 
         private readonly CredentialPipeline _pipeline;
 
+        internal readonly string[] AdditionallyAllowedTenantIds;
+
         /// <summary>
         /// Protected constructor for mocking.
         /// </summary>
@@ -43,41 +46,42 @@ namespace Azure.Identity
         { }
 
         /// <summary>
-        /// Creates an instance of the ClientCertificateCredential with the details needed to authenticate against Azure Active Directory with the specified certificate.
+        /// Creates an instance of the ClientCertificateCredential with the details needed to authenticate against Microsoft Entra ID with the specified certificate.
         /// </summary>
-        /// <param name="tenantId">The Azure Active Directory tenant (directory) Id of the service principal.</param>
+        /// <param name="tenantId">The Microsoft Entra tenant (directory) ID of the service principal.</param>
         /// <param name="clientId">The client (application) ID of the service principal</param>
         /// <param name="clientCertificatePath">The path to a file which contains both the client certificate and private key.</param>
         public ClientCertificateCredential(string tenantId, string clientId, string clientCertificatePath)
-            : this(tenantId, clientId, clientCertificatePath, null, null, null)
+            : this(tenantId, clientId, clientCertificatePath, null, null, null, null)
         { }
 
         /// <summary>
-        /// Creates an instance of the ClientCertificateCredential with the details needed to authenticate against Azure Active Directory with the specified certificate.
+        /// Creates an instance of the ClientCertificateCredential with the details needed to authenticate against Microsoft Entra ID with the specified certificate.
         /// </summary>
-        /// <param name="tenantId">The Azure Active Directory tenant (directory) Id of the service principal.</param>
+        /// <param name="tenantId">The Microsoft Entra tenant (directory) ID of the service principal.</param>
         /// <param name="clientId">The client (application) ID of the service principal</param>
         /// <param name="clientCertificatePath">The path to a file which contains both the client certificate and private key.</param>
-        /// <param name="options">Options that allow to configure the management of the requests sent to the Azure Active Directory service.</param>
+        /// <param name="options">Options that allow to configure the management of the requests sent to Microsoft Entra ID.</param>
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public ClientCertificateCredential(string tenantId, string clientId, string clientCertificatePath, TokenCredentialOptions options)
-            : this(tenantId, clientId, clientCertificatePath, options, null, null)
+            : this(tenantId, clientId, clientCertificatePath, null, options, null, null)
         { }
 
         /// <summary>
-        /// Creates an instance of the ClientCertificateCredential with the details needed to authenticate against Azure Active Directory with the specified certificate.
+        /// Creates an instance of the ClientCertificateCredential with the details needed to authenticate against Microsoft Entra ID with the specified certificate.
         /// </summary>
-        /// <param name="tenantId">The Azure Active Directory tenant (directory) Id of the service principal.</param>
+        /// <param name="tenantId">The Microsoft Entra tenant (directory) ID of the service principal.</param>
         /// <param name="clientId">The client (application) ID of the service principal</param>
         /// <param name="clientCertificatePath">The path to a file which contains both the client certificate and private key.</param>
-        /// <param name="options">Options that allow to configure the management of the requests sent to the Azure Active Directory service.</param>
+        /// <param name="options">Options that allow to configure the management of the requests sent to Microsoft Entra ID.</param>
         public ClientCertificateCredential(string tenantId, string clientId, string clientCertificatePath, ClientCertificateCredentialOptions options)
-            : this(tenantId, clientId, clientCertificatePath, options, null, null)
+            : this(tenantId, clientId, clientCertificatePath, null, options, null, null)
         { }
 
         /// <summary>
-        /// Creates an instance of the ClientCertificateCredential with the details needed to authenticate against Azure Active Directory with the specified certificate.
+        /// Creates an instance of the ClientCertificateCredential with the details needed to authenticate against Microsoft Entra ID with the specified certificate.
         /// </summary>
-        /// <param name="tenantId">The Azure Active Directory tenant (directory) Id of the service principal.</param>
+        /// <param name="tenantId">The Microsoft Entra tenant (directory) ID of the service principal.</param>
         /// <param name="clientId">The client (application) ID of the service principal</param>
         /// <param name="clientCertificate">The authentication X509 Certificate of the service principal</param>
         public ClientCertificateCredential(string tenantId, string clientId, X509Certificate2 clientCertificate)
@@ -85,23 +89,24 @@ namespace Azure.Identity
         { }
 
         /// <summary>
-        /// Creates an instance of the ClientCertificateCredential with the details needed to authenticate against Azure Active Directory with the specified certificate.
+        /// Creates an instance of the ClientCertificateCredential with the details needed to authenticate against Microsoft Entra ID with the specified certificate.
         /// </summary>
-        /// <param name="tenantId">The Azure Active Directory tenant (directory) Id of the service principal.</param>
+        /// <param name="tenantId">The Microsoft Entra tenant (directory) ID of the service principal.</param>
         /// <param name="clientId">The client (application) ID of the service principal</param>
         /// <param name="clientCertificate">The authentication X509 Certificate of the service principal</param>
-        /// <param name="options">Options that allow to configure the management of the requests sent to the Azure Active Directory service.</param>
+        /// <param name="options">Options that allow to configure the management of the requests sent to Microsoft Entra ID.</param>
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public ClientCertificateCredential(string tenantId, string clientId, X509Certificate2 clientCertificate, TokenCredentialOptions options)
             : this(tenantId, clientId, clientCertificate, options, null, null)
         { }
 
         /// <summary>
-        /// Creates an instance of the ClientCertificateCredential with the details needed to authenticate against Azure Active Directory with the specified certificate.
+        /// Creates an instance of the ClientCertificateCredential with the details needed to authenticate against Microsoft Entra ID with the specified certificate.
         /// </summary>
-        /// <param name="tenantId">The Azure Active Directory tenant (directory) Id of the service principal.</param>
+        /// <param name="tenantId">The Microsoft Entra tenant (directory) ID of the service principal.</param>
         /// <param name="clientId">The client (application) ID of the service principal</param>
         /// <param name="clientCertificate">The authentication X509 Certificate of the service principal</param>
-        /// <param name="options">Options that allow to configure the management of the requests sent to the Azure Active Directory service.</param>
+        /// <param name="options">Options that allow to configure the management of the requests sent to Microsoft Entra ID.</param>
         public ClientCertificateCredential(string tenantId, string clientId, X509Certificate2 clientCertificate, ClientCertificateCredentialOptions options)
             : this(tenantId, clientId, clientCertificate, options, null, null)
         { }
@@ -110,13 +115,14 @@ namespace Azure.Identity
             string tenantId,
             string clientId,
             string certificatePath,
+            string certificatePassword,
             TokenCredentialOptions options,
             CredentialPipeline pipeline,
             MsalConfidentialClient client)
             : this(
                 tenantId,
                 clientId,
-                new X509Certificate2FromFileProvider(certificatePath ?? throw new ArgumentNullException(nameof(certificatePath))),
+                new X509Certificate2FromFileProvider(certificatePath ?? throw new ArgumentNullException(nameof(certificatePath)), certificatePassword),
                 options,
                 pipeline,
                 client)
@@ -160,10 +166,14 @@ namespace Azure.Identity
                          certificateProvider,
                          certCredOptions?.SendCertificateChain ?? false,
                          options);
+
+            AdditionallyAllowedTenantIds = TenantIdResolver.ResolveAddionallyAllowedTenantIds((options as ISupportsAdditionallyAllowedTenants)?.AdditionallyAllowedTenants);
         }
 
         /// <summary>
-        /// Obtains a token from the Azure Active Directory service, using the specified X509 certificate to authenticate. This method is called automatically by Azure SDK client libraries. You may call this method directly, but you must also handle token caching and token refreshing.
+        /// Obtains a token from Microsoft Entra ID, using the specified X509 certificate to authenticate. Acquired tokens are
+        /// cached by the credential instance. Token lifetime and refreshing is handled automatically. Where possible, reuse credential
+        /// instances to optimize cache effectiveness.
         /// </summary>
         /// <param name="requestContext">The details of the authentication request.</param>
         /// <param name="cancellationToken">A <see cref="CancellationToken"/> controlling the request lifetime.</param>
@@ -174,19 +184,21 @@ namespace Azure.Identity
 
             try
             {
-                var tenantId = TenantIdResolver.Resolve(TenantId, requestContext);
-                AuthenticationResult result = Client.AcquireTokenForClientAsync(requestContext.Scopes, tenantId, false, cancellationToken).EnsureCompleted();
+                var tenantId = TenantIdResolver.Resolve(TenantId, requestContext, AdditionallyAllowedTenantIds);
+                AuthenticationResult result = Client.AcquireTokenForClientAsync(requestContext.Scopes, tenantId, requestContext.IsCaeEnabled, false, cancellationToken).EnsureCompleted();
 
                 return scope.Succeeded(new AccessToken(result.AccessToken, result.ExpiresOn));
             }
             catch (Exception e)
             {
-                throw scope.FailWrapAndThrow(e);
+                throw scope.FailWrapAndThrow(e, Troubleshooting);
             }
         }
 
         /// <summary>
-        /// Obtains a token from the Azure Active Directory service, using the specified X509 certificate to authenticate. This method is called automatically by Azure SDK client libraries. You may call this method directly, but you must also handle token caching and token refreshing.
+        /// Obtains a token from Microsoft Entra ID, using the specified X509 certificate to authenticate. Acquired tokens are
+        /// cached by the credential instance. Token lifetime and refreshing is handled automatically. Where possible, reuse credential
+        /// instances to optimize cache effectiveness.
         /// </summary>
         /// <param name="requestContext">The details of the authentication request.</param>
         /// <param name="cancellationToken">A <see cref="CancellationToken"/> controlling the request lifetime.</param>
@@ -197,9 +209,9 @@ namespace Azure.Identity
 
             try
             {
-                var tenantId = TenantIdResolver.Resolve(TenantId, requestContext);
+                var tenantId = TenantIdResolver.Resolve(TenantId, requestContext, AdditionallyAllowedTenantIds);
                 AuthenticationResult result = await Client
-                    .AcquireTokenForClientAsync(requestContext.Scopes, tenantId, true, cancellationToken)
+                    .AcquireTokenForClientAsync(requestContext.Scopes, tenantId, requestContext.IsCaeEnabled, true, cancellationToken)
                     .ConfigureAwait(false);
 
                 return scope.Succeeded(new AccessToken(result.AccessToken, result.ExpiresOn));

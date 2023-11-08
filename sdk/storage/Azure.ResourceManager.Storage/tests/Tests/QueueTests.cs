@@ -5,17 +5,16 @@ using Azure.Core.TestFramework;
 using Azure.ResourceManager.Resources;
 using NUnit.Framework;
 using Azure.ResourceManager.Storage.Models;
-using Azure.ResourceManager.Storage.Tests.Helpers;
 
 namespace Azure.ResourceManager.Storage.Tests
 {
-    public class QueueTests : StorageTestBase
+    public class QueueTests : StorageManagementTestBase
     {
-        private ResourceGroup _resourceGroup;
-        private StorageAccount _storageAccount;
-        private QueueService _queueService;
+        private ResourceGroupResource _resourceGroup;
+        private StorageAccountResource _storageAccount;
+        private QueueServiceResource _queueService;
         private StorageQueueCollection _storageQueueCollection;
-        public QueueTests(bool async) : base(async)
+        public QueueTests(bool async) : base(async)//, RecordedTestMode.Record)
         {
         }
 
@@ -37,7 +36,7 @@ namespace Azure.ResourceManager.Storage.Tests
             if (_resourceGroup != null)
             {
                 var storageAccountCollection = _resourceGroup.GetStorageAccounts();
-                await foreach (StorageAccount account in storageAccountCollection.GetAllAsync())
+                await foreach (StorageAccountResource account in storageAccountCollection.GetAllAsync())
                 {
                     await account.DeleteAsync(WaitUntil.Completed);
                 }
@@ -52,25 +51,38 @@ namespace Azure.ResourceManager.Storage.Tests
         {
             //create storage queue
             string storageQueueName = Recording.GenerateAssetName("testqueue");
-            StorageQueue queue1 = (await _storageQueueCollection.CreateOrUpdateAsync(WaitUntil.Completed, storageQueueName, new StorageQueueData())).Value;
+            StorageQueueResource queue1 = (await _storageQueueCollection.CreateOrUpdateAsync(WaitUntil.Completed, storageQueueName, new StorageQueueData())).Value;
             Assert.IsNotNull(queue1);
             Assert.AreEqual(queue1.Id.Name, storageQueueName);
 
             //validate if successfully created
-            StorageQueue queue2 = await _storageQueueCollection.GetAsync(storageQueueName);
+            StorageQueueResource queue2 = await _storageQueueCollection.GetAsync(storageQueueName);
             AssertStorageQueueEqual(queue1, queue2);
             Assert.IsTrue(await _storageQueueCollection.ExistsAsync(storageQueueName));
             Assert.IsFalse(await _storageQueueCollection.ExistsAsync(storageQueueName + "1"));
             StorageQueueData queueData = queue2.Data;
             Assert.IsEmpty(queueData.Metadata);
 
+            string queueName2 = Recording.GenerateAssetName("queue2");
+            var data = new StorageQueueData()
+            {
+                Metadata = { { "metadata1", "true" }, { "metadata2", "value2" } }
+            };
+            queue2 = (await _storageQueueCollection.CreateOrUpdateAsync(WaitUntil.Completed, queueName2, data)).Value;
+            Assert.AreEqual(2, queue2.Data.Metadata.Count);
+            Assert.AreEqual(data.Metadata, queue2.Data.Metadata);
+
+            queue2 = await _storageQueueCollection.GetAsync(queueName2);
+            Assert.AreEqual(2, queue2.Data.Metadata.Count);
+            Assert.AreEqual(data.Metadata, queue2.Data.Metadata);
+
             //delete storage queue
             await queue1.DeleteAsync(WaitUntil.Completed);
 
             //validate if successfully deleted
             Assert.IsFalse(await _storageQueueCollection.ExistsAsync(storageQueueName));
-            StorageQueue queue3 = await _storageQueueCollection.GetIfExistsAsync(storageQueueName);
-            Assert.IsNull(queue3);
+            var exception = Assert.ThrowsAsync<RequestFailedException>(async () => { await _storageQueueCollection.GetAsync(storageQueueName); });
+            Assert.AreEqual(404, exception.Status);
         }
 
         [Test]
@@ -80,14 +92,14 @@ namespace Azure.ResourceManager.Storage.Tests
             //create two blob containers
             string queueName1 = Recording.GenerateAssetName("testqueue1");
             string queueName2 = Recording.GenerateAssetName("testqueue2");
-            StorageQueue queue1 = (await _storageQueueCollection.CreateOrUpdateAsync(WaitUntil.Completed, queueName1, new StorageQueueData())).Value;
-            StorageQueue queue2 = (await _storageQueueCollection.CreateOrUpdateAsync(WaitUntil.Completed, queueName2, new StorageQueueData())).Value;
+            StorageQueueResource queue1 = (await _storageQueueCollection.CreateOrUpdateAsync(WaitUntil.Completed, queueName1, new StorageQueueData())).Value;
+            StorageQueueResource queue2 = (await _storageQueueCollection.CreateOrUpdateAsync(WaitUntil.Completed, queueName2, new StorageQueueData())).Value;
 
             //validate if there are two queues
-            StorageQueue queue3 = null;
-            StorageQueue queue4 = null;
+            StorageQueueResource queue3 = null;
+            StorageQueueResource queue4 = null;
             int count = 0;
-            await foreach (StorageQueue queue in _storageQueueCollection.GetAllAsync())
+            await foreach (StorageQueueResource queue in _storageQueueCollection.GetAllAsync())
             {
                 count++;
                 if (queue.Id.Name == queueName1)
@@ -106,7 +118,7 @@ namespace Azure.ResourceManager.Storage.Tests
         {
             //create storage queue
             string storageQueueName = Recording.GenerateAssetName("testqueue");
-            StorageQueue queue1 = (await _storageQueueCollection.CreateOrUpdateAsync(WaitUntil.Completed, storageQueueName, new StorageQueueData())).Value;
+            StorageQueueResource queue1 = (await _storageQueueCollection.CreateOrUpdateAsync(WaitUntil.Completed, storageQueueName, new StorageQueueData())).Value;
             Assert.IsNotNull(queue1);
             Assert.AreEqual(queue1.Id.Name, storageQueueName);
 
@@ -114,7 +126,7 @@ namespace Azure.ResourceManager.Storage.Tests
             StorageQueueData queueData = new StorageQueueData();
             queueData.Metadata.Add("key1", "value1");
             queueData.Metadata.Add("key2", "value2");
-            StorageQueue queue2 = await queue1.UpdateAsync(queueData);
+            StorageQueueResource queue2 = await queue1.UpdateAsync(queueData);
             //validate
             Assert.NotNull(queue2);
             Assert.NotNull(queue2.Data.Metadata);
@@ -127,21 +139,59 @@ namespace Azure.ResourceManager.Storage.Tests
         public async Task UpdateQueueService()
         {
             //update cors
-            CorsRules cors = new CorsRules();
-            cors.CorsRulesValue.Add(new CorsRule(
-                allowedHeaders: new string[] { "x-ms-meta-abc", "x-ms-meta-data*", "x-ms-meta-target*" },
-                allowedMethods: new CorsRuleAllowedMethodsItem[] { "GET", "HEAD", "POST", "OPTIONS", "MERGE", "PUT" },
-                 allowedOrigins: new string[] { "http://www.contoso.com", "http://www.fabrikam.com" },
-                exposedHeaders: new string[] { "x-ms-meta-*" },
-                maxAgeInSeconds: 100));
             QueueServiceData parameter = new QueueServiceData()
             {
-                Cors = cors,
+                Cors = new StorageCorsRules()
+                {
+                    CorsRules =
+                    {
+                        new StorageCorsRule(
+                            allowedHeaders: new string[] { "x-ms-meta-abc", "x-ms-meta-data*", "x-ms-meta-target*" },
+                            allowedMethods: new CorsRuleAllowedMethod[] { "GET", "HEAD", "POST", "OPTIONS", "MERGE", "PUT" },
+                            allowedOrigins: new string[] { "http://www.contoso.com", "http://www.fabrikam.com" },
+                            exposedHeaders: new string[] { "x-ms-meta-*" },
+                            maxAgeInSeconds: 100),
+                        new StorageCorsRule(
+                            allowedOrigins: new string[] { "*" },
+                            allowedMethods: new CorsRuleAllowedMethod[] {"GET" },
+                            maxAgeInSeconds: 2,
+                            exposedHeaders: new string[] { "*" },
+                            allowedHeaders: new string[] { "*" }
+                            )
+                    }
+                },
             };
             _queueService = (await _queueService.CreateOrUpdateAsync(WaitUntil.Completed, parameter)).Value;
 
-            //validate
-            Assert.AreEqual(_queueService.Data.Cors.CorsRulesValue.Count, 1);
+            //Validate CORS Rules
+            Assert.AreEqual(parameter.Cors.CorsRules.Count, _queueService.Data.Cors.CorsRules.Count);
+            for (int i = 0; i < parameter.Cors.CorsRules.Count; i++)
+            {
+                StorageCorsRule getRule = _queueService.Data.Cors.CorsRules[i];
+                StorageCorsRule putRule = parameter.Cors.CorsRules[i];
+
+                Assert.AreEqual(putRule.AllowedHeaders, getRule.AllowedHeaders);
+                Assert.AreEqual(putRule.AllowedMethods, getRule.AllowedMethods);
+                Assert.AreEqual(putRule.AllowedOrigins, getRule.AllowedOrigins);
+                Assert.AreEqual(putRule.ExposedHeaders, getRule.ExposedHeaders);
+                Assert.AreEqual(putRule.MaxAgeInSeconds, getRule.MaxAgeInSeconds);
+            }
+
+            _queueService = (await _queueService.GetAsync()).Value;
+
+            //Validate CORS Rules
+            Assert.AreEqual(parameter.Cors.CorsRules.Count, _queueService.Data.Cors.CorsRules.Count);
+            for (int i = 0; i < parameter.Cors.CorsRules.Count; i++)
+            {
+                StorageCorsRule getRule = _queueService.Data.Cors.CorsRules[i];
+                StorageCorsRule putRule = parameter.Cors.CorsRules[i];
+
+                Assert.AreEqual(putRule.AllowedHeaders, getRule.AllowedHeaders);
+                Assert.AreEqual(putRule.AllowedMethods, getRule.AllowedMethods);
+                Assert.AreEqual(putRule.AllowedOrigins, getRule.AllowedOrigins);
+                Assert.AreEqual(putRule.ExposedHeaders, getRule.ExposedHeaders);
+                Assert.AreEqual(putRule.MaxAgeInSeconds, getRule.MaxAgeInSeconds);
+            }
         }
     }
 }

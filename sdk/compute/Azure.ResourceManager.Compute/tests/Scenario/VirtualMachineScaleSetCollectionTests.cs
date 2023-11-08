@@ -4,15 +4,17 @@
 using System;
 using System.Threading.Tasks;
 using Azure.Core.TestFramework;
+using Azure.ResourceManager.Compute.Models;
 using Azure.ResourceManager.Compute.Tests.Helpers;
 using NUnit.Framework;
 
 namespace Azure.ResourceManager.Compute.Tests
 {
+    [ClientTestFixture(true, "2022-08-01", "2021-04-01", "2020-06-01", "2022-11-01", "2023-03-01", "2023-07-01")]
     public class VirtualMachineScaleSetCollectionTests : VirtualMachineScaleSetTestBase
     {
-        public VirtualMachineScaleSetCollectionTests(bool isAsync)
-            : base(isAsync)//, RecordedTestMode.Record)
+        public VirtualMachineScaleSetCollectionTests(bool isAsync, string apiVersion)
+            : base(isAsync, VirtualMachineScaleSetResource.ResourceType, apiVersion)//, RecordedTestMode.Record)
         {
         }
 
@@ -25,7 +27,41 @@ namespace Azure.ResourceManager.Compute.Tests
             var vnet = await CreateBasicDependenciesOfVirtualMachineScaleSetAsync();
             var input = ResourceDataHelper.GetBasicLinuxVirtualMachineScaleSetData(DefaultLocation, vmssName, GetSubnetId(vnet));
             var lro = await collection.CreateOrUpdateAsync(WaitUntil.Completed, vmssName, input);
-            VirtualMachineScaleSet vmss = lro.Value;
+            VirtualMachineScaleSetResource vmss = lro.Value;
+            Assert.AreEqual(vmssName, vmss.Data.Name);
+        }
+
+        [TestCase]
+        [RecordedTest]
+        public async Task CreateOrUpdateWithExtensions()
+        {
+            var collection = await GetVirtualMachineScaleSetCollectionAsync();
+            var vmssName = Recording.GenerateAssetName("testVMSS-");
+            var vnet = await CreateBasicDependenciesOfVirtualMachineScaleSetAsync();
+            var input = ResourceDataHelper.GetBasicLinuxVirtualMachineScaleSetData(DefaultLocation, vmssName, GetSubnetId(vnet));
+
+            input.VirtualMachineProfile.ExtensionProfile = new VirtualMachineScaleSetExtensionProfile()
+            {
+                Extensions =
+                    {
+                        new VirtualMachineScaleSetExtensionData("TestExt")
+                        {
+                            AutoUpgradeMinorVersion = true,
+                            EnableAutomaticUpgrade = false,
+                            Settings = BinaryData.FromObjectAsJson(new {}),
+                            ProtectedSettings = BinaryData.FromObjectAsJson(new
+                                {
+                                    commandToExecute = $@"echo helloworld",
+                                }),
+                            Publisher = "Microsoft.Azure.Extensions",
+                            ExtensionType = "CustomScript",
+                            TypeHandlerVersion = "2.1",
+                        }
+                    }
+            };
+
+            var lro = await collection.CreateOrUpdateAsync(WaitUntil.Completed, vmssName, input);
+            VirtualMachineScaleSetResource vmss = lro.Value;
             Assert.AreEqual(vmssName, vmss.Data.Name);
         }
 
@@ -38,8 +74,8 @@ namespace Azure.ResourceManager.Compute.Tests
             var vnet = await CreateBasicDependenciesOfVirtualMachineScaleSetAsync();
             var input = ResourceDataHelper.GetBasicLinuxVirtualMachineScaleSetData(DefaultLocation, vmssName, GetSubnetId(vnet));
             var lro = await collection.CreateOrUpdateAsync(WaitUntil.Completed, vmssName, input);
-            VirtualMachineScaleSet vmss1 = lro.Value;
-            VirtualMachineScaleSet vmss2 = await collection.GetAsync(vmssName);
+            VirtualMachineScaleSetResource vmss1 = lro.Value;
+            VirtualMachineScaleSetResource vmss2 = await collection.GetAsync(vmssName);
 
             ResourceDataHelper.AssertVirtualMachineScaleSet(vmss1.Data, vmss2.Data);
         }
@@ -53,7 +89,7 @@ namespace Azure.ResourceManager.Compute.Tests
             var vnet = await CreateBasicDependenciesOfVirtualMachineScaleSetAsync();
             var input = ResourceDataHelper.GetBasicLinuxVirtualMachineScaleSetData(DefaultLocation, vmssName, GetSubnetId(vnet));
             var lro = await collection.CreateOrUpdateAsync(WaitUntil.Completed, vmssName, input);
-            VirtualMachineScaleSet vmss = lro.Value;
+            VirtualMachineScaleSetResource vmss = lro.Value;
             Assert.IsTrue(await collection.ExistsAsync(vmssName));
             Assert.IsFalse(await collection.ExistsAsync(vmssName + "1"));
 
@@ -95,7 +131,7 @@ namespace Azure.ResourceManager.Compute.Tests
             _ = await collection.CreateOrUpdateAsync(WaitUntil.Completed, vmssName1, input1);
             _ = await collection.CreateOrUpdateAsync(WaitUntil.Completed, vmssName2, input2);
 
-            VirtualMachineScaleSet vmss1 = null, vmss2 = null;
+            VirtualMachineScaleSetResource vmss1 = null, vmss2 = null;
             await foreach (var vmss in DefaultSubscription.GetVirtualMachineScaleSetsAsync())
             {
                 if (vmss.Data.Name == vmssName1)

@@ -16,27 +16,29 @@ namespace Azure.ResourceManager.Resources.Models
         /// <summary> Initializes a new instance of LocationMetadata. </summary>
         internal LocationMetadata()
         {
-            PairedRegion = new ChangeTrackingList<PairedRegion>();
+            PairedRegions = new ChangeTrackingList<PairedRegion>();
         }
 
         /// <summary> Initializes a new instance of LocationMetadata. </summary>
         /// <param name="regionType"> The type of the region. </param>
         /// <param name="regionCategory"> The category of the region. </param>
+        /// <param name="geography"> The geography of the location. </param>
         /// <param name="geographyGroup"> The geography group of the location. </param>
         /// <param name="longitude"> The longitude of the location. </param>
         /// <param name="latitude"> The latitude of the location. </param>
         /// <param name="physicalLocation"> The physical location of the Azure location. </param>
-        /// <param name="pairedRegion"> The regions paired to this region. </param>
+        /// <param name="pairedRegions"> The regions paired to this region. </param>
         /// <param name="homeLocation"> The home location of an edge zone. </param>
-        internal LocationMetadata(RegionType? regionType, RegionCategory? regionCategory, string geographyGroup, string longitude, string latitude, string physicalLocation, IReadOnlyList<PairedRegion> pairedRegion, string homeLocation)
+        internal LocationMetadata(RegionType? regionType, RegionCategory? regionCategory, string geography, string geographyGroup, double? longitude, double? latitude, string physicalLocation, IReadOnlyList<PairedRegion> pairedRegions, string homeLocation)
         {
             RegionType = regionType;
             RegionCategory = regionCategory;
+            Geography = geography;
             GeographyGroup = geographyGroup;
             Longitude = longitude;
             Latitude = latitude;
             PhysicalLocation = physicalLocation;
-            PairedRegion = pairedRegion;
+            PairedRegions = pairedRegions;
             HomeLocation = homeLocation;
         }
 
@@ -44,16 +46,14 @@ namespace Azure.ResourceManager.Resources.Models
         public RegionType? RegionType { get; }
         /// <summary> The category of the region. </summary>
         public RegionCategory? RegionCategory { get; }
+        /// <summary> The geography of the location. </summary>
+        public string Geography { get; }
         /// <summary> The geography group of the location. </summary>
         public string GeographyGroup { get; }
-        /// <summary> The longitude of the location. </summary>
-        public string Longitude { get; }
-        /// <summary> The latitude of the location. </summary>
-        public string Latitude { get; }
         /// <summary> The physical location of the Azure location. </summary>
         public string PhysicalLocation { get; }
         /// <summary> The regions paired to this region. </summary>
-        public IReadOnlyList<PairedRegion> PairedRegion { get; }
+        public IReadOnlyList<PairedRegion> PairedRegions { get; }
         /// <summary> The home location of an edge zone. </summary>
         public string HomeLocation { get; }
     }

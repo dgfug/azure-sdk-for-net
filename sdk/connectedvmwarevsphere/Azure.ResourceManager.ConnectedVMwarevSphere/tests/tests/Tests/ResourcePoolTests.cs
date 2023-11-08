@@ -6,6 +6,7 @@ using Azure.Core.TestFramework;
 using NUnit.Framework;
 using Azure.ResourceManager.ConnectedVMwarevSphere.Models;
 using Azure.ResourceManager.ConnectedVMwarevSphere.Tests.Helpers;
+using Azure.ResourceManager.Resources.Models;
 
 namespace Azure.ResourceManager.ConnectedVMwarevSphere.Tests.tests.Tests
 {
@@ -37,7 +38,7 @@ namespace Azure.ResourceManager.ConnectedVMwarevSphere.Tests.tests.Tests
             resourcePoolBody.VCenterId = VcenterId;
             resourcePoolBody.ExtendedLocation = _extendedLocation;
             // create resource pool
-            ResourcePool resourcePool1 = (await _resourcePoolCollection.CreateOrUpdateAsync(WaitUntil.Completed, resourcePoolName, resourcePoolBody)).Value;
+            ResourcePoolResource resourcePool1 = (await _resourcePoolCollection.CreateOrUpdateAsync(WaitUntil.Completed, resourcePoolName, resourcePoolBody)).Value;
             Assert.IsNotNull(resourcePool1);
             Assert.AreEqual(resourcePool1.Id.Name, resourcePoolName);
         }
@@ -58,7 +59,7 @@ namespace Azure.ResourceManager.ConnectedVMwarevSphere.Tests.tests.Tests
             resourcePoolBody.VCenterId = VcenterId;
             resourcePoolBody.ExtendedLocation = _extendedLocation;
             // create resource pool
-            ResourcePool resourcePool1 = (await _resourcePoolCollection.CreateOrUpdateAsync(WaitUntil.Completed, resourcePoolName, resourcePoolBody)).Value;
+            ResourcePoolResource resourcePool1 = (await _resourcePoolCollection.CreateOrUpdateAsync(WaitUntil.Completed, resourcePoolName, resourcePoolBody)).Value;
             Assert.IsNotNull(resourcePool1);
             Assert.AreEqual(resourcePool1.Id.Name, resourcePoolName);
             // get resource pool
@@ -82,12 +83,12 @@ namespace Azure.ResourceManager.ConnectedVMwarevSphere.Tests.tests.Tests
             resourcePoolBody.VCenterId = VcenterId;
             resourcePoolBody.ExtendedLocation = _extendedLocation;
             // create resource pool
-            ResourcePool resourcePool1 = (await _resourcePoolCollection.CreateOrUpdateAsync(WaitUntil.Completed, resourcePoolName, resourcePoolBody)).Value;
+            ResourcePoolResource resourcePool1 = (await _resourcePoolCollection.CreateOrUpdateAsync(WaitUntil.Completed, resourcePoolName, resourcePoolBody)).Value;
             Assert.IsNotNull(resourcePool1);
             Assert.AreEqual(resourcePool1.Id.Name, resourcePoolName);
             // check for exists resource pool
-            resourcePool1 = await _resourcePoolCollection.GetIfExistsAsync(resourcePoolName);
-            Assert.AreEqual(resourcePool1.Id.Name, resourcePoolName);
+            bool exists = await _resourcePoolCollection.ExistsAsync(resourcePoolName);
+            Assert.IsTrue(exists);
         }
 
         [TestCase]
@@ -106,7 +107,7 @@ namespace Azure.ResourceManager.ConnectedVMwarevSphere.Tests.tests.Tests
             resourcePoolBody.VCenterId = VcenterId;
             resourcePoolBody.ExtendedLocation = _extendedLocation;
             // create resource pool
-            ResourcePool resourcePool1 = (await _resourcePoolCollection.CreateOrUpdateAsync(WaitUntil.Completed, resourcePoolName, resourcePoolBody)).Value;
+            ResourcePoolResource resourcePool1 = (await _resourcePoolCollection.CreateOrUpdateAsync(WaitUntil.Completed, resourcePoolName, resourcePoolBody)).Value;
             Assert.IsNotNull(resourcePool1);
             Assert.AreEqual(resourcePool1.Id.Name, resourcePoolName);
             int count = 0;
@@ -133,7 +134,7 @@ namespace Azure.ResourceManager.ConnectedVMwarevSphere.Tests.tests.Tests
             resourcePoolBody.VCenterId = VcenterId;
             resourcePoolBody.ExtendedLocation = _extendedLocation;
             // create resource pool
-            ResourcePool resourcePool1 = (await _resourcePoolCollection.CreateOrUpdateAsync(WaitUntil.Completed, resourcePoolName, resourcePoolBody)).Value;
+            ResourcePoolResource resourcePool1 = (await _resourcePoolCollection.CreateOrUpdateAsync(WaitUntil.Completed, resourcePoolName, resourcePoolBody)).Value;
             Assert.IsNotNull(resourcePool1);
             Assert.AreEqual(resourcePool1.Id.Name, resourcePoolName);
             resourcePool1 = null;

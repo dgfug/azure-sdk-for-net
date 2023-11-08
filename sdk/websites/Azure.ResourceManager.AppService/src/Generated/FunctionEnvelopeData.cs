@@ -5,15 +5,18 @@
 
 #nullable disable
 
+using System;
 using System.Collections.Generic;
 using Azure.Core;
-using Azure.ResourceManager.AppService.Models;
 using Azure.ResourceManager.Models;
 
 namespace Azure.ResourceManager.AppService
 {
-    /// <summary> A class representing the FunctionEnvelope data model. </summary>
-    public partial class FunctionEnvelopeData : ProxyOnlyResource
+    /// <summary>
+    /// A class representing the FunctionEnvelope data model.
+    /// Function information.
+    /// </summary>
+    public partial class FunctionEnvelopeData : ResourceData
     {
         /// <summary> Initializes a new instance of FunctionEnvelopeData. </summary>
         public FunctionEnvelopeData()
@@ -26,7 +29,6 @@ namespace Azure.ResourceManager.AppService
         /// <param name="name"> The name. </param>
         /// <param name="resourceType"> The resourceType. </param>
         /// <param name="systemData"> The systemData. </param>
-        /// <param name="kind"> Kind of resource. </param>
         /// <param name="functionAppId"> Function App ID. </param>
         /// <param name="scriptRootPathHref"> Script root path URI. </param>
         /// <param name="scriptHref"> Script URI. </param>
@@ -40,7 +42,8 @@ namespace Azure.ResourceManager.AppService
         /// <param name="invokeUrlTemplate"> The invocation URL. </param>
         /// <param name="language"> The function language. </param>
         /// <param name="isDisabled"> Gets or sets a value indicating whether the function is disabled. </param>
-        internal FunctionEnvelopeData(ResourceIdentifier id, string name, ResourceType resourceType, SystemData systemData, string kind, string functionAppId, string scriptRootPathHref, string scriptHref, string configHref, string testDataHref, string secretsFileHref, string href, object config, IDictionary<string, string> files, string testData, string invokeUrlTemplate, string language, bool? isDisabled) : base(id, name, resourceType, systemData, kind)
+        /// <param name="kind"> Kind of resource. </param>
+        internal FunctionEnvelopeData(ResourceIdentifier id, string name, ResourceType resourceType, SystemData systemData, string functionAppId, string scriptRootPathHref, string scriptHref, string configHref, string testDataHref, string secretsFileHref, string href, BinaryData config, IDictionary<string, string> files, string testData, string invokeUrlTemplate, string language, bool? isDisabled, string kind) : base(id, name, resourceType, systemData)
         {
             FunctionAppId = functionAppId;
             ScriptRootPathHref = scriptRootPathHref;
@@ -55,6 +58,7 @@ namespace Azure.ResourceManager.AppService
             InvokeUrlTemplate = invokeUrlTemplate;
             Language = language;
             IsDisabled = isDisabled;
+            Kind = kind;
         }
 
         /// <summary> Function App ID. </summary>
@@ -71,8 +75,37 @@ namespace Azure.ResourceManager.AppService
         public string SecretsFileHref { get; set; }
         /// <summary> Function URI. </summary>
         public string Href { get; set; }
-        /// <summary> Config information. </summary>
-        public object Config { get; set; }
+        /// <summary>
+        /// Config information.
+        /// <para>
+        /// To assign an object to this property use <see cref="BinaryData.FromObjectAsJson{T}(T, System.Text.Json.JsonSerializerOptions?)"/>.
+        /// </para>
+        /// <para>
+        /// To assign an already formatted json string to this property use <see cref="BinaryData.FromString(string)"/>.
+        /// </para>
+        /// <para>
+        /// Examples:
+        /// <list type="bullet">
+        /// <item>
+        /// <term>BinaryData.FromObjectAsJson("foo")</term>
+        /// <description>Creates a payload of "foo".</description>
+        /// </item>
+        /// <item>
+        /// <term>BinaryData.FromString("\"foo\"")</term>
+        /// <description>Creates a payload of "foo".</description>
+        /// </item>
+        /// <item>
+        /// <term>BinaryData.FromObjectAsJson(new { key = "value" })</term>
+        /// <description>Creates a payload of { "key": "value" }.</description>
+        /// </item>
+        /// <item>
+        /// <term>BinaryData.FromString("{\"key\": \"value\"}")</term>
+        /// <description>Creates a payload of { "key": "value" }.</description>
+        /// </item>
+        /// </list>
+        /// </para>
+        /// </summary>
+        public BinaryData Config { get; set; }
         /// <summary> File list. </summary>
         public IDictionary<string, string> Files { get; }
         /// <summary> Test data used when testing via the Azure Portal. </summary>
@@ -83,5 +116,7 @@ namespace Azure.ResourceManager.AppService
         public string Language { get; set; }
         /// <summary> Gets or sets a value indicating whether the function is disabled. </summary>
         public bool? IsDisabled { get; set; }
+        /// <summary> Kind of resource. </summary>
+        public string Kind { get; set; }
     }
 }

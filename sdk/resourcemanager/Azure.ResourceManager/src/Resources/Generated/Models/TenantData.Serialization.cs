@@ -5,6 +5,7 @@
 
 #nullable disable
 
+using System;
 using System.Collections.Generic;
 using System.Text.Json;
 using Azure.Core;
@@ -16,8 +17,12 @@ namespace Azure.ResourceManager.Resources
     {
         internal static TenantData DeserializeTenantData(JsonElement element)
         {
+            if (element.ValueKind == JsonValueKind.Null)
+            {
+                return null;
+            }
             Optional<string> id = default;
-            Optional<string> tenantId = default;
+            Optional<Guid> tenantId = default;
             Optional<TenantCategory> tenantCategory = default;
             Optional<string> country = default;
             Optional<string> countryCode = default;
@@ -25,49 +30,51 @@ namespace Azure.ResourceManager.Resources
             Optional<IReadOnlyList<string>> domains = default;
             Optional<string> defaultDomain = default;
             Optional<string> tenantType = default;
-            Optional<string> tenantBrandingLogoUrl = default;
+            Optional<Uri> tenantBrandingLogoUrl = default;
             foreach (var property in element.EnumerateObject())
             {
-                if (property.NameEquals("id"))
+                if (property.NameEquals("id"u8))
                 {
                     id = property.Value.GetString();
                     continue;
                 }
-                if (property.NameEquals("tenantId"))
-                {
-                    tenantId = property.Value.GetString();
-                    continue;
-                }
-                if (property.NameEquals("tenantCategory"))
+                if (property.NameEquals("tenantId"u8))
                 {
                     if (property.Value.ValueKind == JsonValueKind.Null)
                     {
-                        property.ThrowNonNullablePropertyIsNull();
+                        continue;
+                    }
+                    tenantId = property.Value.GetGuid();
+                    continue;
+                }
+                if (property.NameEquals("tenantCategory"u8))
+                {
+                    if (property.Value.ValueKind == JsonValueKind.Null)
+                    {
                         continue;
                     }
                     tenantCategory = property.Value.GetString().ToTenantCategory();
                     continue;
                 }
-                if (property.NameEquals("country"))
+                if (property.NameEquals("country"u8))
                 {
                     country = property.Value.GetString();
                     continue;
                 }
-                if (property.NameEquals("countryCode"))
+                if (property.NameEquals("countryCode"u8))
                 {
                     countryCode = property.Value.GetString();
                     continue;
                 }
-                if (property.NameEquals("displayName"))
+                if (property.NameEquals("displayName"u8))
                 {
                     displayName = property.Value.GetString();
                     continue;
                 }
-                if (property.NameEquals("domains"))
+                if (property.NameEquals("domains"u8))
                 {
                     if (property.Value.ValueKind == JsonValueKind.Null)
                     {
-                        property.ThrowNonNullablePropertyIsNull();
                         continue;
                     }
                     List<string> array = new List<string>();
@@ -78,23 +85,27 @@ namespace Azure.ResourceManager.Resources
                     domains = array;
                     continue;
                 }
-                if (property.NameEquals("defaultDomain"))
+                if (property.NameEquals("defaultDomain"u8))
                 {
                     defaultDomain = property.Value.GetString();
                     continue;
                 }
-                if (property.NameEquals("tenantType"))
+                if (property.NameEquals("tenantType"u8))
                 {
                     tenantType = property.Value.GetString();
                     continue;
                 }
-                if (property.NameEquals("tenantBrandingLogoUrl"))
+                if (property.NameEquals("tenantBrandingLogoUrl"u8))
                 {
-                    tenantBrandingLogoUrl = property.Value.GetString();
+                    if (property.Value.ValueKind == JsonValueKind.Null)
+                    {
+                        continue;
+                    }
+                    tenantBrandingLogoUrl = new Uri(property.Value.GetString());
                     continue;
                 }
             }
-            return new TenantData(id.Value, tenantId.Value, Optional.ToNullable(tenantCategory), country.Value, countryCode.Value, displayName.Value, Optional.ToList(domains), defaultDomain.Value, tenantType.Value, tenantBrandingLogoUrl.Value);
+            return new TenantData(id.Value, Optional.ToNullable(tenantId), Optional.ToNullable(tenantCategory), country.Value, countryCode.Value, displayName.Value, Optional.ToList(domains), defaultDomain.Value, tenantType.Value, tenantBrandingLogoUrl.Value);
         }
     }
 }

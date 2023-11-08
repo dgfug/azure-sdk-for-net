@@ -12,7 +12,7 @@ namespace Azure.ResourceManager.Models
     /// <summary> JsonConverter for managed service identity type v3. </summary>
     internal class ManagedServiceIdentityTypeV3Converter : JsonConverter<ManagedServiceIdentityType>
     {
-        internal const string systemAssignedUserAssignedV3Value = "SystemAssigned,UserAssigned";
+        internal const string SystemAssignedUserAssignedV3Value = "SystemAssigned,UserAssigned";
 
         /// <summary> Serialize managed service identity type to v3 format. </summary>
         /// <param name="writer"> The writer. </param>
@@ -20,10 +20,9 @@ namespace Azure.ResourceManager.Models
         /// <param name="options"> The options for JsonSerializer. </param>
         public override void Write(Utf8JsonWriter writer, ManagedServiceIdentityType model, JsonSerializerOptions options)
         {
-            writer.WritePropertyName("type");
             if (model == ManagedServiceIdentityType.SystemAssignedUserAssigned)
             {
-                writer.WriteStringValue(systemAssignedUserAssignedV3Value);
+                writer.WriteStringValue(SystemAssignedUserAssignedV3Value);
             }
             else
             {
@@ -38,16 +37,12 @@ namespace Azure.ResourceManager.Models
         public override ManagedServiceIdentityType Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
             using var document = JsonDocument.ParseValue(ref reader);
-            foreach (var property in document.RootElement.EnumerateObject())
+            var typeValue = document.RootElement.GetString();
+            if (typeValue.Equals(SystemAssignedUserAssignedV3Value, StringComparison.OrdinalIgnoreCase))
             {
-                var typeValue = property.Value.GetString();
-                if (typeValue.Equals(systemAssignedUserAssignedV3Value, StringComparison.OrdinalIgnoreCase))
-                {
-                    return ManagedServiceIdentityType.SystemAssignedUserAssigned;
-                }
-                return new ManagedServiceIdentityType(typeValue);
+                return ManagedServiceIdentityType.SystemAssignedUserAssigned;
             }
-            return null;
+            return new ManagedServiceIdentityType(typeValue);
         }
     }
 }

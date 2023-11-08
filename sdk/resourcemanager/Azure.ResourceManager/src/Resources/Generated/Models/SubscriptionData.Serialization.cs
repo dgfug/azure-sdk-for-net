@@ -5,6 +5,7 @@
 
 #nullable disable
 
+using System;
 using System.Collections.Generic;
 using System.Text.Json;
 using Azure.Core;
@@ -16,10 +17,14 @@ namespace Azure.ResourceManager.Resources
     {
         internal static SubscriptionData DeserializeSubscriptionData(JsonElement element)
         {
+            if (element.ValueKind == JsonValueKind.Null)
+            {
+                return null;
+            }
             Optional<ResourceIdentifier> id = default;
             Optional<string> subscriptionId = default;
             Optional<string> displayName = default;
-            Optional<string> tenantId = default;
+            Optional<Guid> tenantId = default;
             Optional<SubscriptionState> state = default;
             Optional<SubscriptionPolicies> subscriptionPolicies = default;
             Optional<string> authorizationSource = default;
@@ -27,61 +32,61 @@ namespace Azure.ResourceManager.Resources
             Optional<IReadOnlyDictionary<string, string>> tags = default;
             foreach (var property in element.EnumerateObject())
             {
-                if (property.NameEquals("id"))
+                if (property.NameEquals("id"u8))
                 {
                     if (property.Value.ValueKind == JsonValueKind.Null)
                     {
-                        property.ThrowNonNullablePropertyIsNull();
                         continue;
                     }
                     id = new ResourceIdentifier(property.Value.GetString());
                     continue;
                 }
-                if (property.NameEquals("subscriptionId"))
+                if (property.NameEquals("subscriptionId"u8))
                 {
                     subscriptionId = property.Value.GetString();
                     continue;
                 }
-                if (property.NameEquals("displayName"))
+                if (property.NameEquals("displayName"u8))
                 {
                     displayName = property.Value.GetString();
                     continue;
                 }
-                if (property.NameEquals("tenantId"))
-                {
-                    tenantId = property.Value.GetString();
-                    continue;
-                }
-                if (property.NameEquals("state"))
+                if (property.NameEquals("tenantId"u8))
                 {
                     if (property.Value.ValueKind == JsonValueKind.Null)
                     {
-                        property.ThrowNonNullablePropertyIsNull();
+                        continue;
+                    }
+                    tenantId = property.Value.GetGuid();
+                    continue;
+                }
+                if (property.NameEquals("state"u8))
+                {
+                    if (property.Value.ValueKind == JsonValueKind.Null)
+                    {
                         continue;
                     }
                     state = property.Value.GetString().ToSubscriptionState();
                     continue;
                 }
-                if (property.NameEquals("subscriptionPolicies"))
+                if (property.NameEquals("subscriptionPolicies"u8))
                 {
                     if (property.Value.ValueKind == JsonValueKind.Null)
                     {
-                        property.ThrowNonNullablePropertyIsNull();
                         continue;
                     }
                     subscriptionPolicies = SubscriptionPolicies.DeserializeSubscriptionPolicies(property.Value);
                     continue;
                 }
-                if (property.NameEquals("authorizationSource"))
+                if (property.NameEquals("authorizationSource"u8))
                 {
                     authorizationSource = property.Value.GetString();
                     continue;
                 }
-                if (property.NameEquals("managedByTenants"))
+                if (property.NameEquals("managedByTenants"u8))
                 {
                     if (property.Value.ValueKind == JsonValueKind.Null)
                     {
-                        property.ThrowNonNullablePropertyIsNull();
                         continue;
                     }
                     List<ManagedByTenant> array = new List<ManagedByTenant>();
@@ -92,11 +97,10 @@ namespace Azure.ResourceManager.Resources
                     managedByTenants = array;
                     continue;
                 }
-                if (property.NameEquals("tags"))
+                if (property.NameEquals("tags"u8))
                 {
                     if (property.Value.ValueKind == JsonValueKind.Null)
                     {
-                        property.ThrowNonNullablePropertyIsNull();
                         continue;
                     }
                     Dictionary<string, string> dictionary = new Dictionary<string, string>();
@@ -108,7 +112,7 @@ namespace Azure.ResourceManager.Resources
                     continue;
                 }
             }
-            return new SubscriptionData(id.Value, subscriptionId.Value, displayName.Value, tenantId.Value, Optional.ToNullable(state), subscriptionPolicies.Value, authorizationSource.Value, Optional.ToList(managedByTenants), Optional.ToDictionary(tags));
+            return new SubscriptionData(id.Value, subscriptionId.Value, displayName.Value, Optional.ToNullable(tenantId), Optional.ToNullable(state), subscriptionPolicies.Value, authorizationSource.Value, Optional.ToList(managedByTenants), Optional.ToDictionary(tags));
         }
     }
 }

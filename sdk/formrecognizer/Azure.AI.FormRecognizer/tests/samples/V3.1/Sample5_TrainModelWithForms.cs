@@ -3,16 +3,14 @@
 
 using System;
 using System.Threading.Tasks;
-using Azure.AI.FormRecognizer.Tests;
 using Azure.AI.FormRecognizer.Training;
 using Azure.Core.TestFramework;
-using NUnit.Framework;
 
 namespace Azure.AI.FormRecognizer.Samples
 {
-    public partial class FormRecognizerSamples : SamplesBase<FormRecognizerTestEnvironment>
+    public partial class FormRecognizerSamples
     {
-        [Test]
+        [RecordedTest]
         public async Task TrainModelWithForms()
         {
             string endpoint = TestEnvironment.Endpoint;
@@ -20,14 +18,17 @@ namespace Azure.AI.FormRecognizer.Samples
 
             #region Snippet:FormRecognizerSampleTrainModelWithForms
             // For this sample, you can use the training forms found in the `trainingFiles` folder.
-            // Upload the forms to your storage container and then generate a container SAS URL.
-            // For instructions on setting up forms for training in an Azure Storage Blob Container, see
+            // Upload the forms to your storage container and then generate a container SAS URL. Note
+            // that a container URI without SAS is accepted only when the container is public or has a
+            // managed identity configured.
+            //
+            // For instructions on setting up forms for training in an Azure Blob Storage Container, see
             // https://docs.microsoft.com/azure/cognitive-services/form-recognizer/build-training-data-set#upload-your-training-data
 
 #if SNIPPET
-            Uri trainingFileUri = <trainingFileUri>;
+            Uri trainingFileUri = new Uri("<trainingFileUri>");
 #else
-            Uri trainingFileUri = new Uri(TestEnvironment.BlobContainerSasUrlV2);
+            Uri trainingFileUri = new Uri(TestEnvironment.BlobContainerSasUrl);
 #endif
             FormTrainingClient client = new FormTrainingClient(new Uri(endpoint), new AzureKeyCredential(apiKey));
 

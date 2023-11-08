@@ -6,6 +6,7 @@
 #nullable disable
 
 using System;
+using Azure.Core;
 
 namespace Azure.Search.Documents.Indexes.Models
 {
@@ -17,16 +18,13 @@ namespace Azure.Search.Documents.Indexes.Models
         /// <exception cref="ArgumentNullException"> <paramref name="name"/> is null. </exception>
         public TruncateTokenFilter(string name) : base(name)
         {
-            if (name == null)
-            {
-                throw new ArgumentNullException(nameof(name));
-            }
+            Argument.AssertNotNull(name, nameof(name));
 
             ODataType = "#Microsoft.Azure.Search.TruncateTokenFilter";
         }
 
         /// <summary> Initializes a new instance of TruncateTokenFilter. </summary>
-        /// <param name="oDataType"> Identifies the concrete type of the token filter. </param>
+        /// <param name="oDataType"> A URI fragment specifying the type of token filter. </param>
         /// <param name="name"> The name of the token filter. It must only contain letters, digits, spaces, dashes or underscores, can only start and end with alphanumeric characters, and is limited to 128 characters. </param>
         /// <param name="length"> The length at which terms will be truncated. Default and maximum is 300. </param>
         internal TruncateTokenFilter(string oDataType, string name, int? length) : base(oDataType, name)

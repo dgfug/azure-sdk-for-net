@@ -17,10 +17,11 @@ namespace Azure.ResourceManager.Network.Tests
         : NetworkServiceClientTestBase
     {
         private const string NamePrefix = "test_ddos_";
-        private Resources.ResourceGroup resourceGroup;
-        private Resources.Subscription _subscription;
+        private Resources.ResourceGroupResource resourceGroup;
+        private Resources.SubscriptionResource _subscription;
 
-        public DdosProtectionPlanTests(bool isAsync) : base(isAsync)
+        public DdosProtectionPlanTests(bool isAsync)
+            : base(isAsync)//, RecordedTestMode.Record)
         {
         }
 
@@ -40,15 +41,17 @@ namespace Azure.ResourceManager.Network.Tests
             return resourceGroup.GetDdosProtectionPlans();
         }
 
-        [Test]
-        [RecordedTest]
-        public async Task DdosProtectionPlanApiTest()
+        [TestCase(null)]
+        [TestCase(false)]
+        [TestCase(true)]
+        public async Task DdosProtectionPlanApiTest(bool? useTagResource)
         {
+            SetTagResourceUsage(ArmClient, useTagResource);
             var container = GetCollection();
             var name = Recording.GenerateAssetName(NamePrefix);
 
             // create
-            DdosProtectionPlan ddosProtectionPlan = await (await container.CreateOrUpdateAsync(WaitUntil.Completed, name, new DdosProtectionPlanData(TestEnvironment.Location))).WaitForCompletionAsync();
+            DdosProtectionPlanResource ddosProtectionPlan = await (await container.CreateOrUpdateAsync(WaitUntil.Completed, name, new DdosProtectionPlanData(TestEnvironment.Location))).WaitForCompletionAsync();
 
             Assert.True(await container.ExistsAsync(name));
 

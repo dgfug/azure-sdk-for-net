@@ -5,6 +5,7 @@
 
 #nullable disable
 
+using System;
 using System.Text.Json;
 using Azure.Core;
 
@@ -15,27 +16,38 @@ namespace Azure.ResourceManager.Resources.Models
         void IUtf8JsonSerializable.Write(Utf8JsonWriter writer)
         {
             writer.WriteStartObject();
-            writer.WritePropertyName("path");
+            writer.WritePropertyName("path"u8);
             writer.WriteStringValue(Path);
-            writer.WritePropertyName("template");
-            writer.WriteObjectValue(Template);
+            writer.WritePropertyName("template"u8);
+#if NET6_0_OR_GREATER
+				writer.WriteRawValue(Template);
+#else
+            using (JsonDocument document = JsonDocument.Parse(Template))
+            {
+                JsonSerializer.Serialize(writer, document.RootElement);
+            }
+#endif
             writer.WriteEndObject();
         }
 
         internal static LinkedTemplateArtifact DeserializeLinkedTemplateArtifact(JsonElement element)
         {
+            if (element.ValueKind == JsonValueKind.Null)
+            {
+                return null;
+            }
             string path = default;
-            object template = default;
+            BinaryData template = default;
             foreach (var property in element.EnumerateObject())
             {
-                if (property.NameEquals("path"))
+                if (property.NameEquals("path"u8))
                 {
                     path = property.Value.GetString();
                     continue;
                 }
-                if (property.NameEquals("template"))
+                if (property.NameEquals("template"u8))
                 {
-                    template = property.Value.GetObject();
+                    template = BinaryData.FromString(property.Value.GetRawText());
                     continue;
                 }
             }

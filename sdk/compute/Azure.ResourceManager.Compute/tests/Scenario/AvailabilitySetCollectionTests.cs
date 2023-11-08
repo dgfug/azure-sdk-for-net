@@ -10,10 +10,11 @@ using NUnit.Framework;
 
 namespace Azure.ResourceManager.Compute.Tests
 {
+    [ClientTestFixture(true, "2021-04-01", "2020-06-01", "2022-08-01", "2022-11-01", "2023-03-01", "2023-07-01")]
     public class AvailabilitySetCollectionTests : ComputeTestBase
     {
-        public AvailabilitySetCollectionTests(bool isAsync)
-            : base(isAsync)//, RecordedTestMode.Record)
+        public AvailabilitySetCollectionTests(bool isAsync, string apiVersion)
+            : base(isAsync, AvailabilitySetResource.ResourceType, apiVersion)//, RecordedTestMode.Record)
         {
         }
 
@@ -51,8 +52,8 @@ namespace Azure.ResourceManager.Compute.Tests
                 { "key", "value" }
             });
             var lro = await collection.CreateOrUpdateAsync(WaitUntil.Completed, setName, input);
-            AvailabilitySet set1 = lro.Value;
-            AvailabilitySet set2 = await collection.GetAsync(setName);
+            AvailabilitySetResource set1 = lro.Value;
+            AvailabilitySetResource set2 = await collection.GetAsync(setName);
 
             ResourceDataHelper.AssertAvailabilitySet(set1.Data, set2.Data);
         }
@@ -111,7 +112,7 @@ namespace Azure.ResourceManager.Compute.Tests
             _ = await collection.CreateOrUpdateAsync(WaitUntil.Completed, setName1, input);
             _ = await collection.CreateOrUpdateAsync(WaitUntil.Completed, setName2, input);
 
-            AvailabilitySet set1 = null, set2 = null;
+            AvailabilitySetResource set1 = null, set2 = null;
             await foreach (var availabilitySet in DefaultSubscription.GetAvailabilitySetsAsync())
             {
                 if (availabilitySet.Data.Name == setName1)

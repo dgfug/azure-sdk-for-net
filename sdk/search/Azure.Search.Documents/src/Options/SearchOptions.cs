@@ -3,14 +3,15 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
+using System.Text;
+using System.Threading;
 using Azure.Core;
 using Azure.Search.Documents.Models;
 
 namespace Azure.Search.Documents
 {
     /// <summary>
-    /// Options for <see cref="SearchClient.SearchAsync"/> that
+    /// Options for <see cref="SearchClient.SearchAsync(string, SearchOptions, CancellationToken)"/> that
     /// allow specifying filtering, sorting, faceting, paging, and other search
     /// query behaviors.
     /// </summary>
@@ -18,9 +19,6 @@ namespace Azure.Search.Documents
     [CodeGenModel("SearchRequest")]
     public partial class SearchOptions
     {
-        private const string QueryAnswerRawSplitter = "|count-";
-        private const string QueryCaptionRawSplitter = "|highlight-";
-
         /// <summary>
         /// Initializes a new instance of SearchOptions from a continuation
         /// token to continue fetching results from a previous search.
@@ -36,7 +34,7 @@ namespace Azure.Search.Documents
         /// A full-text search query expression;  Use "*" or omit this
         /// parameter to match all documents.
         /// </summary>
-        [CodeGenMember("search")]
+        [CodeGenMember("Search")]
         internal string SearchText { get; set; }
 
         /// <summary>
@@ -45,7 +43,7 @@ namespace Azure.Search.Documents
         /// construct the filter expression.
         /// </summary>
         /// <seealso href="https://docs.microsoft.com/azure/search/search-filters">Filters in Azure Cognitive Search</seealso>
-        [CodeGenMember("filter")]
+        [CodeGenMember("Filter")]
         public string Filter { get; set; }
 
         /// <summary>
@@ -75,24 +73,11 @@ namespace Azure.Search.Documents
         /// <summary>
         /// Join SearchFields so it can be sent as a comma separated string.
         /// </summary>
-        [CodeGenMember("searchFields")]
+        [CodeGenMember("SearchFields")]
         internal string SearchFieldsRaw
         {
             get => SearchFields.CommaJoin();
             set => SearchFields = SearchExtensions.CommaSplit(value);
-        }
-
-        /// <summary> The list of field names used for semantic search. </summary>
-        public IList<string> SemanticFields { get; internal set; } = new List<string>();
-
-        /// <summary>
-        /// Join SemanticFields so it can be sent as a comma-separated string.
-        /// </summary>
-        [CodeGenMember("semanticFields")]
-        internal string SemanticFieldsRaw
-        {
-            get => SemanticFields.CommaJoin();
-            set => SemanticFields = SearchExtensions.CommaSplit(value);
         }
 
         /// <summary>
@@ -104,7 +89,7 @@ namespace Azure.Search.Documents
         /// <summary>
         /// Join Select so it can be sent as a comma separated string.
         /// </summary>
-        [CodeGenMember("select")]
+        [CodeGenMember("Select")]
         internal string SelectRaw
         {
             get => Select.CommaJoin();
@@ -119,7 +104,7 @@ namespace Azure.Search.Documents
         /// that can be used to issue another Search request for the next page
         /// of results.
         /// </summary>
-        [CodeGenMember("top")]
+        [CodeGenMember("Top")]
         public int? Size { get; set; }
 
         /// <summary>
@@ -137,7 +122,7 @@ namespace Azure.Search.Documents
         /// <summary>
         /// Join OrderBy so it can be sent as a comma separated string.
         /// </summary>
-        [CodeGenMember("orderby")]
+        [CodeGenMember("OrderBy")]
         internal string OrderByRaw
         {
             get => OrderBy.CommaJoin();
@@ -160,7 +145,7 @@ namespace Azure.Search.Documents
         /// comma-separated list of name:value pairs.
         /// </summary>
         /// <seealso href="https://docs.microsoft.com/azure/search/search-filters-facets">How to build a facet filter in Azure Cognitive Search.</seealso>
-        [CodeGenMember("facets")]
+        [CodeGenMember("Facets")]
         public IList<string> Facets { get; internal set; } = new List<string>();
 
         /// <summary>
@@ -170,132 +155,110 @@ namespace Azure.Search.Documents
         /// called &apos;mylocation&apos; the parameter string would be
         /// &quot;mylocation--122.2,44.8&quot; (without the quotes).
         /// </summary>
-        [CodeGenMember("scoringParameters")]
+        [CodeGenMember("ScoringParameters")]
         public IList<string> ScoringParameters { get; internal set; } = new List<string>();
 
+        /// <summary> Options for performing Semantic Search. </summary>
+        public SemanticSearchOptions SemanticSearch { get; set; }
+
+        /// <summary> Options for performing Vector Search. </summary>
+        public VectorSearchOptions VectorSearch { get; set; }
+
         /// <summary> The name of a semantic configuration that will be used when processing documents for queries of type semantic. </summary>
-        [CodeGenMember("semanticConfiguration")]
-        public string SemanticConfigurationName { get; set; }
-
-        /// <summary> A value that specifies the language of the search query. </summary>
-        [CodeGenMember("queryLanguage")]
-        public QueryLanguage? QueryLanguage { get; set; }
-
-        /// <summary> A value that specifies the type of the speller to use to spell-correct individual search query terms. </summary>
-        [CodeGenMember("speller")]
-        public QuerySpellerType? QuerySpeller { get; set; }
-
-        /// <summary> A value that specifies whether <see cref="SearchResults{T}.Answers"/> should be returned as part of the search response. </summary>
-        public QueryAnswerType? QueryAnswer { get; set; }
-
-        /// <summary> A value that specifies the number of <see cref="SearchResults{T}.Answers"/> that should be returned as part of the search response. </summary>
-        public int? QueryAnswerCount { get; set; }
-
-        /// <summary> Constructed from <see cref="QueryAnswer"/> and <see cref="QueryAnswerCount"/>.</summary>
-        [CodeGenMember("answers")]
-        internal string QueryAnswerRaw
+        [CodeGenMember("SemanticConfiguration")]
+        private string SemanticConfigurationName
         {
-            get
-            {
-                string queryAnswerStringValue = null;
-
-                if (QueryAnswer.HasValue)
-                {
-                    queryAnswerStringValue = $"{QueryAnswer.Value}{QueryAnswerRawSplitter}{QueryAnswerCount.GetValueOrDefault(1)}";
-                }
-
-                return queryAnswerStringValue;
-            }
-
+            get { return SemanticSearch?.SemanticConfigurationName; }
             set
             {
-                if (string.IsNullOrEmpty(value))
+                if (SemanticSearch?.SemanticConfigurationName != null)
                 {
-                    QueryAnswer = null;
-                    QueryAnswerCount = null;
-                }
-                else
-                {
-                    if (value.Contains(QueryAnswerRawSplitter))
-                    {
-                        var queryAnswerPart = value.Substring(0, value.IndexOf(QueryAnswerRawSplitter, StringComparison.OrdinalIgnoreCase));
-                        var countPart = value.Substring(value.IndexOf(QueryAnswerRawSplitter, StringComparison.OrdinalIgnoreCase) + QueryAnswerRawSplitter.Length);
-
-                        if (string.IsNullOrEmpty(queryAnswerPart))
-                        {
-                            QueryAnswer = null;
-                        }
-                        else
-                        {
-                            QueryAnswer = new QueryAnswerType(queryAnswerPart);
-                        }
-
-                        if (int.TryParse(countPart, out int countValue))
-                        {
-                            QueryAnswerCount = countValue;
-                        }
-                    }
-                    else
-                    {
-                        QueryAnswer = new QueryAnswerType(value);
-                        QueryAnswerCount = null;
-                    }
+                    SemanticSearch.SemanticConfigurationName = value;
                 }
             }
         }
 
-        /// <summary>
-        /// A value that specifies whether <see cref="SearchResults{T}.Captions"/> should be returned as part of the search response.
-        /// <para>The default value is <see cref="QueryCaptionType.None"/>.</para>
-        /// </summary>
-        public QueryCaptionType? QueryCaption { get; set; }
+        /// <summary> Constructed from <see cref="QueryAnswer.AnswerType"/>, <see cref="QueryAnswer.Count"/> and <see cref="QueryAnswer.Threshold"/>. For example: "extractive|count-1,threshold-0.7"</summary>
+        [CodeGenMember("Answers")]
+        private string QueryAnswerRaw
+        {
+            get { return SemanticSearch?.QueryAnswer?.QueryAnswerRaw; }
+            set
+            {
+                if (SemanticSearch?.QueryAnswer?.QueryAnswerRaw != null)
+                {
+                    SemanticSearch.QueryAnswer.QueryAnswerRaw = value;
+                }
+            }
+        }
 
-        /// <summary>
-        /// If <see cref="QueryCaption"/> is set to <see cref="QueryCaptionType.Extractive"/>, setting this to <c>true</c> enables highlighting of the returned captions.
-        /// It populates <see cref="CaptionResult.Highlights"/>.
-        /// <para>The default value is <c>true</c>.</para>
-        /// </summary>
-        public bool? QueryCaptionHighlightEnabled { get; set; }
+        /// <summary> Constructed from <see cref="QueryCaption.CaptionType"/> and <see cref="QueryCaption.HighlightEnabled"/>.</summary>
+        [CodeGenMember("Captions")]
+        private string QueryCaptionRaw
+        {
+            get { return SemanticSearch?.QueryCaption?.QueryCaptionRaw; }
+            set
+            {
+                if (SemanticSearch?.QueryCaption?.QueryCaptionRaw != null)
+                {
+                    SemanticSearch.QueryCaption.QueryCaptionRaw = value;
+                }
+            }
+        }
 
-        /// <summary> Constructed from <see cref="QueryCaption"/> and <see cref="QueryCaptionHighlightEnabled"/>.</summary>
-        [CodeGenMember("captions")]
-        internal string QueryCaptionRaw
+        /// <summary> Allows the user to choose whether a semantic call should fail completely (default / current behavior), or to return partial results. </summary>
+        [CodeGenMember("SemanticErrorHandling")]
+        private SemanticErrorMode? SemanticErrorMode
+        {
+            get { return SemanticSearch?.ErrorMode; }
+            set
+            {
+                if (SemanticSearch?.ErrorMode != null)
+                {
+                    SemanticSearch.ErrorMode = value;
+                }
+            }
+        }
+
+        /// <summary> Allows the user to set an upper bound on the amount of time it takes for semantic enrichment to finish processing before the request fails. </summary>
+        private int? SemanticMaxWaitInMilliseconds
         {
             get
             {
-                string queryCaptionStringValue = null;
-
-                if (QueryCaption.HasValue)
-                {
-                    queryCaptionStringValue = $"{QueryCaption.Value}{QueryCaptionRawSplitter}{QueryCaptionHighlightEnabled.GetValueOrDefault(true)}";
-                }
-
-                return queryCaptionStringValue;
+                return (int?)SemanticSearch?.MaxWait?.TotalMilliseconds;
             }
-
             set
             {
-                if (string.IsNullOrEmpty(value))
+                if (SemanticSearch?.MaxWait != null)
                 {
-                    QueryCaption = null;
-                    QueryCaptionHighlightEnabled = null;
+                    SemanticSearch.MaxWait = value.HasValue ? TimeSpan.FromMilliseconds(value.Value) : null;
                 }
-                else
-                {
-                    int splitIndex = value.IndexOf(QueryCaptionRawSplitter, StringComparison.OrdinalIgnoreCase);
-                    if (splitIndex >= 0)
-                    {
-                        var queryCaptionPart = value.Substring(0, splitIndex);
-                        var highlightPart = value.Substring(splitIndex + QueryCaptionRawSplitter.Length);
+            }
+        }
 
-                        QueryCaption = string.IsNullOrEmpty(queryCaptionPart) ? null : new QueryCaptionType(queryCaptionPart);
-                        QueryCaptionHighlightEnabled = bool.TryParse(highlightPart, out bool highlightValue) ? highlightValue : null;
-                    }
-                    else
-                    {
-                        QueryCaption = new QueryCaptionType(value);
-                        QueryCaptionHighlightEnabled = null;
-                    }
+        /// <summary> The query parameters for multi-vector search queries. </summary>
+        private IList<VectorQuery> VectorQueries
+        {
+            get { return VectorSearch?.Queries != null? VectorSearch.Queries : new ChangeTrackingList<VectorQuery>(); }
+            set
+            {
+                if (VectorSearch?.Queries != null)
+                {
+                    VectorSearch.Queries = value;
+                }
+            }
+        }
+
+        /// <summary> Determines whether or not filters are applied before or after the vector search is performed. Default is <see cref="VectorFilterMode.PreFilter" /> for new indexes. </summary>
+        [CodeGenMember("VectorFilterMode")]
+        private VectorFilterMode? FilterMode
+        {
+            get { return VectorSearch?.FilterMode; }
+            set
+            {
+                if (VectorSearch?.FilterMode != null)
+                {
+                    VectorSearch.FilterMode = value;
                 }
             }
         }
@@ -307,8 +270,8 @@ namespace Azure.Search.Documents
         /// <param name="destination">The destination options.</param>
         private static void Copy(SearchOptions source, SearchOptions destination)
         {
-            Debug.Assert(source != null);
-            Debug.Assert(destination != null);
+            System.Diagnostics.Debug.Assert(source != null);
+            System.Diagnostics.Debug.Assert(destination != null);
 
             destination.Facets = source.Facets;
             destination.Filter = source.Filter;
@@ -318,12 +281,6 @@ namespace Azure.Search.Documents
             destination.IncludeTotalCount = source.IncludeTotalCount;
             destination.MinimumCoverage = source.MinimumCoverage;
             destination.OrderBy = source.OrderBy;
-            destination.QueryAnswer = source.QueryAnswer;
-            destination.QueryAnswerCount = source.QueryAnswerCount;
-            destination.QueryCaption = source.QueryCaption;
-            destination.QueryCaptionHighlightEnabled = source.QueryCaptionHighlightEnabled;
-            destination.QueryLanguage = source.QueryLanguage;
-            destination.QuerySpeller = source.QuerySpeller;
             destination.QueryType = source.QueryType;
             destination.ScoringParameters = source.ScoringParameters;
             destination.ScoringProfile = source.ScoringProfile;
@@ -332,10 +289,11 @@ namespace Azure.Search.Documents
             destination.SearchMode = source.SearchMode;
             destination.SearchText = source.SearchText;
             destination.Select = source.Select;
-            destination.SemanticConfigurationName = source.SemanticConfigurationName;
-            destination.SemanticFields = source.SemanticFields;
+            destination.SessionId = source.SessionId;
             destination.Size = source.Size;
             destination.Skip = source.Skip;
+            destination.SemanticSearch = source.SemanticSearch;
+            destination.VectorSearch = source.VectorSearch;
         }
 
         /// <summary>

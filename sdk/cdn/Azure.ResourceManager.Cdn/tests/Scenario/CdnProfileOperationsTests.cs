@@ -21,25 +21,27 @@ namespace Azure.ResourceManager.Cdn.Tests
         [RecordedTest]
         public async Task Delete()
         {
-            Subscription subscription = await Client.GetDefaultSubscriptionAsync();
-            ResourceGroup rg = await CreateResourceGroup(subscription, "testRg-");
+            SubscriptionResource subscription = await Client.GetDefaultSubscriptionAsync();
+            ResourceGroupResource rg = await CreateResourceGroup(subscription, "testRg-");
             string cdnProfileName = Recording.GenerateAssetName("profile-");
-            Profile cdnProfile = await CreateCdnProfile(rg, cdnProfileName, CdnSkuName.StandardAkamai);
+            ProfileResource cdnProfile = await CreateCdnProfile(rg, cdnProfileName, CdnSkuName.StandardAkamai);
             await cdnProfile.DeleteAsync(WaitUntil.Completed);
             var ex = Assert.ThrowsAsync<RequestFailedException>(async () => await cdnProfile.GetAsync());
             Assert.AreEqual(404, ex.Status);
         }
 
-        [TestCase]
-        [RecordedTest]
-        public async Task Update()
+        //TODO: [TestCase(null)] Need to be able to re-record this case
+        [TestCase(true)]
+        //TODO: [TestCase(false)] Need to be able to re-record this case
+        public async Task Update(bool? useTagResource)
         {
-            Subscription subscription = await Client.GetDefaultSubscriptionAsync();
-            ResourceGroup rg = await CreateResourceGroup(subscription, "testRg-");
+            SetTagResourceUsage(Client, useTagResource);
+            SubscriptionResource subscription = await Client.GetDefaultSubscriptionAsync();
+            ResourceGroupResource rg = await CreateResourceGroup(subscription, "testRg-");
             string cdnProfileName = Recording.GenerateAssetName("profile-");
-            Profile cdnProfile = await CreateCdnProfile(rg, cdnProfileName, CdnSkuName.StandardAkamai);
+            ProfileResource cdnProfile = await CreateCdnProfile(rg, cdnProfileName, CdnSkuName.StandardAkamai);
             var lro = await cdnProfile.AddTagAsync("newTag", "newValue");
-            Profile updatedCdnProfile = lro.Value;
+            ProfileResource updatedCdnProfile = lro.Value;
             ResourceDataHelper.AssertProfileUpdate(updatedCdnProfile, "newTag", "newValue");
         }
 
@@ -47,23 +49,23 @@ namespace Azure.ResourceManager.Cdn.Tests
         [RecordedTest]
         public async Task GenerateSsoUri()
         {
-            Subscription subscription = await Client.GetDefaultSubscriptionAsync();
-            ResourceGroup rg = await CreateResourceGroup(subscription, "testRg-");
+            SubscriptionResource subscription = await Client.GetDefaultSubscriptionAsync();
+            ResourceGroupResource rg = await CreateResourceGroup(subscription, "testRg-");
             string cdnProfileName = Recording.GenerateAssetName("profile-");
-            Profile cdnProfile = await CreateCdnProfile(rg, cdnProfileName, CdnSkuName.StandardVerizon);
+            ProfileResource cdnProfile = await CreateCdnProfile(rg, cdnProfileName, CdnSkuName.StandardVerizon);
             SsoUri ssoUri = await cdnProfile.GenerateSsoUriAsync();
             Assert.NotNull(ssoUri);
-            Assert.True(ssoUri.SsoUriValue.StartsWith("https://"));
+            Assert.True(ssoUri.AvailableSsoUri.ToString().StartsWith("https://"));
         }
 
         [TestCase]
         [RecordedTest]
         public async Task GetSupportedOptimizationTypes()
         {
-            Subscription subscription = await Client.GetDefaultSubscriptionAsync();
-            ResourceGroup rg = await CreateResourceGroup(subscription, "testRg-");
+            SubscriptionResource subscription = await Client.GetDefaultSubscriptionAsync();
+            ResourceGroupResource rg = await CreateResourceGroup(subscription, "testRg-");
             string cdnProfileName = Recording.GenerateAssetName("profile-");
-            Profile cdnProfile = await CreateCdnProfile(rg, cdnProfileName, CdnSkuName.StandardAkamai);
+            ProfileResource cdnProfile = await CreateCdnProfile(rg, cdnProfileName, CdnSkuName.StandardAkamai);
             SupportedOptimizationTypesListResult optimizationTypesList = await cdnProfile.GetSupportedOptimizationTypesAsync();
             Assert.NotNull(optimizationTypesList);
             Assert.NotNull(optimizationTypesList.SupportedOptimizationTypes);
@@ -74,16 +76,16 @@ namespace Azure.ResourceManager.Cdn.Tests
         [RecordedTest]
         public async Task GetResourceUsage()
         {
-            Subscription subscription = await Client.GetDefaultSubscriptionAsync();
-            ResourceGroup rg = await CreateResourceGroup(subscription, "testRg-");
+            SubscriptionResource subscription = await Client.GetDefaultSubscriptionAsync();
+            ResourceGroupResource rg = await CreateResourceGroup(subscription, "testRg-");
             string cdnProfileName = Recording.GenerateAssetName("profile-");
-            Profile cdnProfile = await CreateCdnProfile(rg, cdnProfileName, CdnSkuName.StandardAkamai);
+            ProfileResource cdnProfile = await CreateCdnProfile(rg, cdnProfileName, CdnSkuName.StandardAkamai);
             int count = 0;
-            await foreach (var tempResourceUsage in cdnProfile.GetResourceUsageAsync())
+            await foreach (var tempResourceUsage in cdnProfile.GetResourceUsagesAsync())
             {
                 count++;
                 Assert.AreEqual(tempResourceUsage.ResourceType, "endpoint");
-                Assert.AreEqual(tempResourceUsage.Unit, "count");
+                Assert.AreEqual(tempResourceUsage.Unit, CdnUsageUnit.Count);
                 Assert.AreEqual(tempResourceUsage.CurrentValue, 0);
                 Assert.AreEqual(tempResourceUsage.Limit, 25);
             }

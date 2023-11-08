@@ -11,52 +11,56 @@ namespace Azure.ResourceManager.CosmosDB.Tests
 {
     public class SqlStoredProcedureTests : CosmosDBManagementClientBase
     {
-        private DatabaseAccount _databaseAccount;
-        private SqlDatabase _sqlDatabase;
+        private CosmosDBAccountResource _databaseAccount;
+        private CosmosDBSqlDatabaseResource _sqlDatabase;
         private ResourceIdentifier _sqlContainerId;
-        private SqlContainer _sqlContainer;
+        private CosmosDBSqlContainerResource _sqlContainer;
         private string _storedProcedureName;
 
         public SqlStoredProcedureTests(bool isAsync) : base(isAsync)
         {
         }
 
-        protected SqlStoredProcedureCollection SqlStoredProcedureCollection => _sqlContainer.GetSqlStoredProcedures();
+        protected CosmosDBSqlStoredProcedureCollection SqlStoredProcedureCollection => _sqlContainer.GetCosmosDBSqlStoredProcedures();
 
         [OneTimeSetUp]
         public async Task GlobalSetup()
         {
-            _resourceGroup = await GlobalClient.GetResourceGroup(_resourceGroupIdentifier).GetAsync();
+            IgnoreTestInNonWindowsAgent();
 
-            _databaseAccount = await CreateDatabaseAccount(SessionRecording.GenerateAssetName("dbaccount-"), DatabaseAccountKind.GlobalDocumentDB);
+            _resourceGroup = await GlobalClient.GetResourceGroupResource(_resourceGroupIdentifier).GetAsync();
 
-            _sqlDatabase = await SqlDatabaseTests.CreateSqlDatabase(SessionRecording.GenerateAssetName("sql-db-"), null, _databaseAccount.GetSqlDatabases());
+            _databaseAccount = await CreateDatabaseAccount(SessionRecording.GenerateAssetName("dbaccount-"), CosmosDBAccountKind.GlobalDocumentDB);
 
-            _sqlContainerId = (await SqlContainerTests.CreateSqlContainer(SessionRecording.GenerateAssetName("sql-container-"), null, _sqlDatabase.GetSqlContainers())).Id;
+            _sqlDatabase = await SqlDatabaseTests.CreateSqlDatabase(SessionRecording.GenerateAssetName("sql-db-"), null, _databaseAccount.GetCosmosDBSqlDatabases());
+
+            _sqlContainerId = (await SqlContainerTests.CreateSqlContainer(SessionRecording.GenerateAssetName("sql-container-"), null, _sqlDatabase.GetCosmosDBSqlContainers())).Id;
 
             await StopSessionRecordingAsync();
         }
 
         [OneTimeTearDown]
-        public void GlobalTeardown()
+        public async Task GlobalTeardown()
         {
-            _sqlContainer.Delete(WaitUntil.Completed);
-            _sqlDatabase.Delete(WaitUntil.Completed);
-            _databaseAccount.Delete(WaitUntil.Completed);
+            await _sqlContainer.DeleteAsync(WaitUntil.Completed);
+            await _sqlDatabase.DeleteAsync(WaitUntil.Completed);
+            await _databaseAccount.DeleteAsync(WaitUntil.Completed);
         }
 
         [SetUp]
         public async Task SetUp()
         {
-            _sqlContainer = await ArmClient.GetSqlContainer(_sqlContainerId).GetAsync();
+            _sqlContainer = await ArmClient.GetCosmosDBSqlContainerResource(_sqlContainerId).GetAsync();
         }
 
         [TearDown]
         public async Task TearDown()
         {
-            SqlStoredProcedure storedProcedure = await SqlStoredProcedureCollection.GetIfExistsAsync(_storedProcedureName);
-            if (storedProcedure != null)
+            if (await SqlStoredProcedureCollection.ExistsAsync(_storedProcedureName))
             {
+                var id = SqlStoredProcedureCollection.Id;
+                id = CosmosDBSqlStoredProcedureResource.CreateResourceIdentifier(id.SubscriptionId, id.ResourceGroupName, id.Parent.Parent.Name, id.Parent.Name, id.Name, _storedProcedureName);
+                CosmosDBSqlStoredProcedureResource storedProcedure = this.ArmClient.GetCosmosDBSqlStoredProcedureResource(id);
                 await storedProcedure.DeleteAsync(WaitUntil.Completed);
             }
         }
@@ -66,7 +70,7 @@ namespace Azure.ResourceManager.CosmosDB.Tests
         public async Task SqlStoredProcedureCreateAndUpdate()
         {
             var storedProcedure = await CreateSqlStoredProcedure(null);
-            Assert.AreEqual(_storedProcedureName, storedProcedure.Data.Resource.Id);
+            Assert.AreEqual(_storedProcedureName, storedProcedure.Data.Resource.StoredProcedureName);
             // Seems bug in swagger definition
             //Assert.AreEqual(TestThroughput1, container.Data.Options.Throughput);
 
@@ -75,20 +79,20 @@ namespace Azure.ResourceManager.CosmosDB.Tests
 
             // NOT WORKING API
             //ThroughputSettingsData throughtput = await container.GetMongoDBCollectionThroughputAsync();
-            SqlStoredProcedure storedProcedure2 = await SqlStoredProcedureCollection.GetAsync(_storedProcedureName);
-            Assert.AreEqual(_storedProcedureName, storedProcedure2.Data.Resource.Id);
+            CosmosDBSqlStoredProcedureResource storedProcedure2 = await SqlStoredProcedureCollection.GetAsync(_storedProcedureName);
+            Assert.AreEqual(_storedProcedureName, storedProcedure2.Data.Resource.StoredProcedureName);
             //Assert.AreEqual(TestThroughput1, container2.Data.Options.Throughput);
 
             VerifySqlStoredProcedures(storedProcedure, storedProcedure2);
 
             // TODO: use original tags see defect: https://github.com/Azure/autorest.csharp/issues/1590
-            SqlStoredProcedureCreateUpdateData updateOptions = new SqlStoredProcedureCreateUpdateData(AzureLocation.WestUS, storedProcedure.Data.Resource)
+            var updateOptions = new CosmosDBSqlStoredProcedureCreateOrUpdateContent(AzureLocation.WestUS, storedProcedure.Data.Resource)
             {
-                Options = new CreateUpdateOptions { Throughput = TestThroughput2 }
+                Options = new CosmosDBCreateUpdateConfig { Throughput = TestThroughput2 }
             };
 
             storedProcedure = (await SqlStoredProcedureCollection.CreateOrUpdateAsync(WaitUntil.Completed, _storedProcedureName, updateOptions)).Value;
-            Assert.AreEqual(_storedProcedureName, storedProcedure.Data.Resource.Id);
+            Assert.AreEqual(_storedProcedureName, storedProcedure.Data.Resource.StoredProcedureName);
             storedProcedure2 = await SqlStoredProcedureCollection.GetAsync(_storedProcedureName);
             VerifySqlStoredProcedures(storedProcedure, storedProcedure2);
         }
@@ -113,15 +117,15 @@ namespace Azure.ResourceManager.CosmosDB.Tests
             var storedProcedure = await CreateSqlStoredProcedure(null);
             await storedProcedure.DeleteAsync(WaitUntil.Completed);
 
-            storedProcedure = await SqlStoredProcedureCollection.GetIfExistsAsync(_storedProcedureName);
-            Assert.Null(storedProcedure);
+            bool exists = await SqlStoredProcedureCollection.ExistsAsync(_storedProcedureName);
+            Assert.IsFalse(exists);
         }
 
-        internal async Task<SqlStoredProcedure> CreateSqlStoredProcedure(AutoscaleSettings autoscale)
+        internal async Task<CosmosDBSqlStoredProcedureResource> CreateSqlStoredProcedure(AutoscaleSettings autoscale)
         {
             _storedProcedureName = Recording.GenerateAssetName("sql-stored-procedure-");
-            SqlStoredProcedureCreateUpdateData sqlDatabaseCreateUpdateOptions = new SqlStoredProcedureCreateUpdateData(AzureLocation.WestUS,
-                new SqlStoredProcedureResource(_storedProcedureName)
+            CosmosDBSqlStoredProcedureCreateOrUpdateContent sqlDatabaseCreateUpdateOptions = new CosmosDBSqlStoredProcedureCreateOrUpdateContent(AzureLocation.WestUS,
+                new Models.CosmosDBSqlStoredProcedureResourceInfo(_storedProcedureName)
                 {
                     Body = @"function () {
     var updatetext = getContext();
@@ -136,14 +140,14 @@ namespace Azure.ResourceManager.CosmosDB.Tests
             return sqlContainerLro.Value;
         }
 
-        private void VerifySqlStoredProcedures(SqlStoredProcedure expectedValue, SqlStoredProcedure actualValue)
+        private void VerifySqlStoredProcedures(CosmosDBSqlStoredProcedureResource expectedValue, CosmosDBSqlStoredProcedureResource actualValue)
         {
             Assert.AreEqual(expectedValue.Id, actualValue.Id);
             Assert.AreEqual(expectedValue.Data.Name, actualValue.Data.Name);
-            Assert.AreEqual(expectedValue.Data.Resource.Id, actualValue.Data.Resource.Id);
+            Assert.AreEqual(expectedValue.Data.Resource.StoredProcedureName, actualValue.Data.Resource.StoredProcedureName);
             Assert.AreEqual(expectedValue.Data.Resource.Rid, actualValue.Data.Resource.Rid);
-            Assert.AreEqual(expectedValue.Data.Resource.Ts, actualValue.Data.Resource.Ts);
-            Assert.AreEqual(expectedValue.Data.Resource.Etag, actualValue.Data.Resource.Etag);
+            Assert.AreEqual(expectedValue.Data.Resource.Timestamp, actualValue.Data.Resource.Timestamp);
+            Assert.AreEqual(expectedValue.Data.Resource.ETag, actualValue.Data.Resource.ETag);
             Assert.AreEqual(expectedValue.Data.Resource.Body, actualValue.Data.Resource.Body);
         }
     }

@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
+using System.ComponentModel;
 using System.Threading;
 using System.Threading.Tasks;
 using Azure.Core;
@@ -301,6 +302,100 @@ namespace Azure.Containers.ContainerRegistry
                 {
                     string digest = GetDigest(cancellationToken);
                     string order = tagOrder == ArtifactTagOrder.None ? null : tagOrder.ToSerialString();
+                    string uriReference = ContainerRegistryClient.ParseUriReferenceFromLinkHeader(nextLink);
+                    var response = _restClient.GetTagsNextPage(uriReference, _repositoryName, last: null, n: null, orderby: order, digest: digest, cancellationToken);
+                    return Page.FromValues(response.Value.Tags, response.Headers.Link, response.GetRawResponse());
+                }
+                catch (Exception e)
+                {
+                    scope.Failed(e);
+                    throw;
+                }
+            }
+
+            return PageableHelpers.CreateEnumerable(FirstPageFunc, NextPageFunc);
+        }
+
+        /// <summary> List the tags that uniquely identify this artifact and the properties of each. </summary>
+        /// <param name="orderBy"> Requested order of tags in the collection. </param>
+        /// <param name="cancellationToken"> The cancellation token to use. </param>
+        /// <exception cref="RequestFailedException">Thrown when a failure is returned by the Container Registry service.</exception>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public virtual AsyncPageable<ArtifactTagProperties> GetTagPropertiesCollectionAsync(ArtifactTagOrder orderBy = ArtifactTagOrder.None, CancellationToken cancellationToken = default)
+        {
+            async Task<Page<ArtifactTagProperties>> FirstPageFunc(int? pageSizeHint)
+            {
+                using DiagnosticScope scope = _clientDiagnostics.CreateScope($"{nameof(RegistryArtifact)}.{nameof(GetTagPropertiesCollection)}");
+                scope.Start();
+                try
+                {
+                    string digest = await GetDigestAsync(cancellationToken).ConfigureAwait(false);
+                    string order = orderBy == ArtifactTagOrder.None ? null : orderBy.ToSerialString();
+                    var response = await _restClient.GetTagsAsync(_repositoryName, last: null, n: pageSizeHint, orderby: order, digest: digest, cancellationToken: cancellationToken).ConfigureAwait(false);
+                    return Page.FromValues(response.Value.Tags, response.Headers.Link, response.GetRawResponse());
+                }
+                catch (Exception e)
+                {
+                    scope.Failed(e);
+                    throw;
+                }
+            }
+
+            async Task<Page<ArtifactTagProperties>> NextPageFunc(string nextLink, int? pageSizeHint)
+            {
+                using DiagnosticScope scope = _clientDiagnostics.CreateScope($"{nameof(RegistryArtifact)}.{nameof(GetTagPropertiesCollection)}");
+                scope.Start();
+                try
+                {
+                    string digest = await GetDigestAsync(cancellationToken).ConfigureAwait(false);
+                    string order = orderBy == ArtifactTagOrder.None ? null : orderBy.ToSerialString();
+                    string uriReference = ContainerRegistryClient.ParseUriReferenceFromLinkHeader(nextLink);
+                    var response = await _restClient.GetTagsNextPageAsync(uriReference, _repositoryName, last: null, n: null, orderby: order, digest: digest, cancellationToken).ConfigureAwait(false);
+                    return Page.FromValues(response.Value.Tags, response.Headers.Link, response.GetRawResponse());
+                }
+                catch (Exception e)
+                {
+                    scope.Failed(e);
+                    throw;
+                }
+            }
+
+            return PageableHelpers.CreateAsyncEnumerable(FirstPageFunc, NextPageFunc);
+        }
+
+        /// <summary> List the tags that uniquely identify this artifact and the properties of each. </summary>
+        /// <param name="orderBy"> Requested order of tags in the collection. </param>
+        /// <param name="cancellationToken"> The cancellation token to use. </param>
+        /// <exception cref="RequestFailedException">Thrown when a failure is returned by the Container Registry service.</exception>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public virtual Pageable<ArtifactTagProperties> GetTagPropertiesCollection(ArtifactTagOrder orderBy = ArtifactTagOrder.None, CancellationToken cancellationToken = default)
+        {
+            Page<ArtifactTagProperties> FirstPageFunc(int? pageSizeHint)
+            {
+                using DiagnosticScope scope = _clientDiagnostics.CreateScope($"{nameof(RegistryArtifact)}.{nameof(GetTagPropertiesCollection)}");
+                scope.Start();
+                try
+                {
+                    string digest = GetDigest(cancellationToken);
+                    string order = orderBy == ArtifactTagOrder.None ? null : orderBy.ToSerialString();
+                    var response = _restClient.GetTags(_repositoryName, last: null, n: pageSizeHint, orderby: order, digest: digest, cancellationToken: cancellationToken);
+                    return Page.FromValues(response.Value.Tags, response.Headers.Link, response.GetRawResponse());
+                }
+                catch (Exception e)
+                {
+                    scope.Failed(e);
+                    throw;
+                }
+            }
+
+            Page<ArtifactTagProperties> NextPageFunc(string nextLink, int? pageSizeHint)
+            {
+                using DiagnosticScope scope = _clientDiagnostics.CreateScope($"{nameof(RegistryArtifact)}.{nameof(GetTagPropertiesCollection)}");
+                scope.Start();
+                try
+                {
+                    string digest = GetDigest(cancellationToken);
+                    string order = orderBy == ArtifactTagOrder.None ? null : orderBy.ToSerialString();
                     string uriReference = ContainerRegistryClient.ParseUriReferenceFromLinkHeader(nextLink);
                     var response = _restClient.GetTagsNextPage(uriReference, _repositoryName, last: null, n: null, orderby: order, digest: digest, cancellationToken);
                     return Page.FromValues(response.Value.Tags, response.Headers.Link, response.GetRawResponse());

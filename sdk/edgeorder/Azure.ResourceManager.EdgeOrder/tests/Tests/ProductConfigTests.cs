@@ -34,9 +34,9 @@ namespace Azure.ResourceManager.EdgeOrder.Tests.Tests
         [TestCase]
         public async Task TestListProductFamiliesMetadata()
         {
-            AsyncPageable<ProductFamiliesMetadataDetails> productFamiliesMetadata =
-                SubscriptionExtensions.GetProductFamiliesMetadataAsync(Subscription);
-            List<ProductFamiliesMetadataDetails> productFamiliesMetadataResult = await productFamiliesMetadata.ToEnumerableAsync();
+            AsyncPageable<ProductFamiliesMetadata> productFamiliesMetadata =
+                EdgeOrderExtensions.GetProductFamiliesMetadataAsync(Subscription);
+            List<ProductFamiliesMetadata> productFamiliesMetadataResult = await productFamiliesMetadata.ToEnumerableAsync();
 
             Assert.NotNull(productFamiliesMetadataResult);
             Assert.IsTrue(productFamiliesMetadataResult.Count >= 1);
@@ -47,12 +47,12 @@ namespace Azure.ResourceManager.EdgeOrder.Tests.Tests
         {
             IList<FilterableProperty> filterableProperty = new List<FilterableProperty>()
             {
-                new FilterableProperty(SupportedFilterTypes.ShipToCountries, new List<string>() { "US" })
+                new FilterableProperty(SupportedFilterType.ShipToCountries, new List<string>() { "US" })
             };
             IDictionary<string, IList<FilterableProperty>> filterableProperties =
                 new Dictionary<string, IList<FilterableProperty>>() { { "azurestackedge", filterableProperty } };
-            ProductFamiliesRequest productFamiliesRequest = new(filterableProperties);
-            AsyncPageable<ProductFamily> productFamilies = SubscriptionExtensions.GetProductFamiliesAsync(Subscription, productFamiliesRequest);
+            ProductFamiliesContent productFamiliesRequest = new(filterableProperties);
+            AsyncPageable<ProductFamily> productFamilies = EdgeOrderExtensions.GetProductFamiliesAsync(Subscription, productFamiliesRequest);
             List<ProductFamily> productFamiliesResult = await productFamilies.ToEnumerableAsync();
 
             Assert.NotNull(productFamiliesResult);
@@ -63,11 +63,11 @@ namespace Azure.ResourceManager.EdgeOrder.Tests.Tests
         public async Task TestListConfigurations()
         {
             ConfigurationFilters configurationFilters = new(GetHierarchyInformation());
-            configurationFilters.FilterableProperty.Add(new FilterableProperty(SupportedFilterTypes.ShipToCountries,
+            configurationFilters.FilterableProperty.Add(new FilterableProperty(SupportedFilterType.ShipToCountries,
                 new List<string>() { "US" }));
-            ConfigurationsRequest configurationsRequest = new(
+            ConfigurationsContent configurationsRequest = new(
                 new List<ConfigurationFilters>() { configurationFilters });
-            AsyncPageable<ProductConfiguration> configurations = SubscriptionExtensions.GetConfigurationsAsync(Subscription,
+            AsyncPageable<ProductConfiguration> configurations = EdgeOrderExtensions.GetConfigurationsAsync(Subscription,
                 configurationsRequest);
             List<ProductConfiguration> configurationsResult = await configurations.ToEnumerableAsync();
 

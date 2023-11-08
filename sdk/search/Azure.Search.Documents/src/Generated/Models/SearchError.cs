@@ -11,7 +11,7 @@ using Azure.Core;
 
 namespace Azure.Search.Documents.Models
 {
-    /// <summary> Describes an error condition for the Azure Cognitive Search API. </summary>
+    /// <summary> Describes an error condition for the API. </summary>
     internal partial class SearchError
     {
         /// <summary> Initializes a new instance of SearchError. </summary>
@@ -19,10 +19,7 @@ namespace Azure.Search.Documents.Models
         /// <exception cref="ArgumentNullException"> <paramref name="message"/> is null. </exception>
         internal SearchError(string message)
         {
-            if (message == null)
-            {
-                throw new ArgumentNullException(nameof(message));
-            }
+            Argument.AssertNotNull(message, nameof(message));
 
             Message = message;
             Details = new ChangeTrackingList<SearchError>();

@@ -5,6 +5,8 @@
 
 #nullable disable
 
+using System;
+
 namespace Azure.ResourceManager.AppService.Models
 {
     /// <summary> Routing rules for ramp up testing. This rule allows to redirect static traffic % to a slot or to gradually change routing % based on performance. </summary>
@@ -19,19 +21,19 @@ namespace Azure.ResourceManager.AppService.Models
         /// <param name="actionHostName"> Hostname of a slot to which the traffic will be redirected if decided to. E.g. myapp-stage.azurewebsites.net. </param>
         /// <param name="reroutePercentage"> Percentage of the traffic which will be redirected to &lt;code&gt;ActionHostName&lt;/code&gt;. </param>
         /// <param name="changeStep">
-        /// In auto ramp up scenario this is the step to add/remove from &lt;code&gt;ReroutePercentage&lt;/code&gt; until it reaches \n&lt;code&gt;MinReroutePercentage&lt;/code&gt; or 
-        /// &lt;code&gt;MaxReroutePercentage&lt;/code&gt;. Site metrics are checked every N minutes specified in &lt;code&gt;ChangeIntervalInMinutes&lt;/code&gt;.\nCustom decision algorithm 
+        /// In auto ramp up scenario this is the step to add/remove from &lt;code&gt;ReroutePercentage&lt;/code&gt; until it reaches \n&lt;code&gt;MinReroutePercentage&lt;/code&gt; or
+        /// &lt;code&gt;MaxReroutePercentage&lt;/code&gt;. Site metrics are checked every N minutes specified in &lt;code&gt;ChangeIntervalInMinutes&lt;/code&gt;.\nCustom decision algorithm
         /// can be provided in TiPCallback site extension which URL can be specified in &lt;code&gt;ChangeDecisionCallbackUrl&lt;/code&gt;.
         /// </param>
         /// <param name="changeIntervalInMinutes"> Specifies interval in minutes to reevaluate ReroutePercentage. </param>
         /// <param name="minReroutePercentage"> Specifies lower boundary above which ReroutePercentage will stay. </param>
         /// <param name="maxReroutePercentage"> Specifies upper boundary below which ReroutePercentage will stay. </param>
-        /// <param name="changeDecisionCallbackUrl">
+        /// <param name="changeDecisionCallbackUri">
         /// Custom decision algorithm can be provided in TiPCallback site extension which URL can be specified. See TiPCallback site extension for the scaffold and contracts.
         /// https://www.siteextensions.net/packages/TiPCallback/
         /// </param>
         /// <param name="name"> Name of the routing rule. The recommended name would be to point to the slot which will receive the traffic in the experiment. </param>
-        internal RampUpRule(string actionHostName, double? reroutePercentage, double? changeStep, int? changeIntervalInMinutes, double? minReroutePercentage, double? maxReroutePercentage, string changeDecisionCallbackUrl, string name)
+        internal RampUpRule(string actionHostName, double? reroutePercentage, double? changeStep, int? changeIntervalInMinutes, double? minReroutePercentage, double? maxReroutePercentage, Uri changeDecisionCallbackUri, string name)
         {
             ActionHostName = actionHostName;
             ReroutePercentage = reroutePercentage;
@@ -39,7 +41,7 @@ namespace Azure.ResourceManager.AppService.Models
             ChangeIntervalInMinutes = changeIntervalInMinutes;
             MinReroutePercentage = minReroutePercentage;
             MaxReroutePercentage = maxReroutePercentage;
-            ChangeDecisionCallbackUrl = changeDecisionCallbackUrl;
+            ChangeDecisionCallbackUri = changeDecisionCallbackUri;
             Name = name;
         }
 
@@ -48,8 +50,8 @@ namespace Azure.ResourceManager.AppService.Models
         /// <summary> Percentage of the traffic which will be redirected to &lt;code&gt;ActionHostName&lt;/code&gt;. </summary>
         public double? ReroutePercentage { get; set; }
         /// <summary>
-        /// In auto ramp up scenario this is the step to add/remove from &lt;code&gt;ReroutePercentage&lt;/code&gt; until it reaches \n&lt;code&gt;MinReroutePercentage&lt;/code&gt; or 
-        /// &lt;code&gt;MaxReroutePercentage&lt;/code&gt;. Site metrics are checked every N minutes specified in &lt;code&gt;ChangeIntervalInMinutes&lt;/code&gt;.\nCustom decision algorithm 
+        /// In auto ramp up scenario this is the step to add/remove from &lt;code&gt;ReroutePercentage&lt;/code&gt; until it reaches \n&lt;code&gt;MinReroutePercentage&lt;/code&gt; or
+        /// &lt;code&gt;MaxReroutePercentage&lt;/code&gt;. Site metrics are checked every N minutes specified in &lt;code&gt;ChangeIntervalInMinutes&lt;/code&gt;.\nCustom decision algorithm
         /// can be provided in TiPCallback site extension which URL can be specified in &lt;code&gt;ChangeDecisionCallbackUrl&lt;/code&gt;.
         /// </summary>
         public double? ChangeStep { get; set; }
@@ -63,7 +65,7 @@ namespace Azure.ResourceManager.AppService.Models
         /// Custom decision algorithm can be provided in TiPCallback site extension which URL can be specified. See TiPCallback site extension for the scaffold and contracts.
         /// https://www.siteextensions.net/packages/TiPCallback/
         /// </summary>
-        public string ChangeDecisionCallbackUrl { get; set; }
+        public Uri ChangeDecisionCallbackUri { get; set; }
         /// <summary> Name of the routing rule. The recommended name would be to point to the slot which will receive the traffic in the experiment. </summary>
         public string Name { get; set; }
     }

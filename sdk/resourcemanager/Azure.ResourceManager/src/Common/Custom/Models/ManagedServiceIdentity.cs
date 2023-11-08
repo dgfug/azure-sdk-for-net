@@ -6,12 +6,11 @@
 using System;
 using System.Collections.Generic;
 using Azure.Core;
-using Azure.ResourceManager.Core;
 
 namespace Azure.ResourceManager.Models
 {
     /// <summary> Managed service identity (system assigned and/or user assigned identities). </summary>
-    [PropertyReferenceType]
+    [PropertyReferenceType(new string[] { "UserAssignedIdentities" })]
     public partial class ManagedServiceIdentity
     {
         /// <summary> Initializes a new instance of ManagedServiceIdentity. </summary>

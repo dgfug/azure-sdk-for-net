@@ -18,7 +18,7 @@ namespace Azure.Search.Documents.Tests.Samples
     public class FieldBuilderIgnore :  SearchTestBase
     {
         public FieldBuilderIgnore(bool async, SearchClientOptions.ServiceVersion serviceVersion)
-            : base(async, serviceVersion, null /* RecordedTestMode.Record /* to re-record */)
+            : base(async, SearchClientOptions.LatestVersion, null /* RecordedTestMode.Record /* to re-record */)
         {
         }
 

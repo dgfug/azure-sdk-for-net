@@ -18,8 +18,8 @@ namespace Azure.AI.FormRecognizer.Training
     /// properties.
     /// </summary>
     /// <remarks>
-    /// This client only works with <see cref="FormRecognizerClientOptions.ServiceVersion.V2_1"/> and lower.
-    /// If you want to use a higher version, please use the <see cref="DocumentAnalysis.DocumentModelAdministrationClient"/>.
+    /// This client only supports <see cref="FormRecognizerClientOptions.ServiceVersion.V2_1"/> and older.
+    /// To use a newer service version, see <see cref="DocumentAnalysis.DocumentModelAdministrationClient"/>.
     /// </remarks>
     public class FormTrainingClient
     {
@@ -117,14 +117,18 @@ namespace Azure.AI.FormRecognizer.Training
 
         #region Training
         /// <summary>
-        /// Trains a model from a collection of custom forms in a blob storage container.
+        /// Trains a model from a collection of custom forms in an Azure Blob Storage container.
         /// </summary>
-        /// <param name="trainingFilesUri">An externally accessible Azure storage blob container Uri.
-        /// For more information see <see href="https://docs.microsoft.com/azure/cognitive-services/form-recognizer/build-training-data-set#upload-your-training-data">here</see>.</param>
+        /// <param name="trainingFilesUri">
+        /// An externally accessible Azure Blob Storage container URI pointing to the container that has your training files.
+        /// Note that a container URI without SAS is accepted only when the container is public or has a managed identity
+        /// configured.
+        /// For more information on setting up a training data set, see <see href="https://docs.microsoft.com/azure/cognitive-services/form-recognizer/build-training-data-set#upload-your-training-data">this article</see>.
+        /// </param>
         /// <param name="useTrainingLabels">If <c>true</c>, corresponding labeled files must exist in the blob container. If <c>false</c>, the model will be trained from forms only.</param>
         /// <param name="modelName">An optional, user-defined name to associate with the model.
         /// <remarks>
-        /// This property is only available for <see cref="FormRecognizerClientOptions.ServiceVersion.V2_1"/> and up.
+        /// This property is only available for <see cref="FormRecognizerClientOptions.ServiceVersion.V2_1"/> and newer.
         /// </remarks>
         /// </param>
         /// <param name="trainingOptions">A set of options available for configuring the training request. For example, set a filter to apply
@@ -164,14 +168,18 @@ namespace Azure.AI.FormRecognizer.Training
         }
 
         /// <summary>
-        /// Trains a model from a collection of custom forms in a blob storage container.
+        /// Trains a model from a collection of custom forms in an Azure Blob Storage container.
         /// </summary>
-        /// <param name="trainingFilesUri">An externally accessible Azure storage blob container Uri.
-        /// For more information see <see href="https://docs.microsoft.com/azure/cognitive-services/form-recognizer/build-training-data-set#upload-your-training-data">here</see>.</param>
+        /// <param name="trainingFilesUri">
+        /// An externally accessible Azure Blob Storage container URI pointing to the container that has your training files.
+        /// Note that a container URI without SAS is accepted only when the container is public or has a managed identity
+        /// configured.
+        /// For more information on setting up a training data set, see <see href="https://docs.microsoft.com/azure/cognitive-services/form-recognizer/build-training-data-set#upload-your-training-data">this article</see>.
+        /// </param>
         /// <param name="useTrainingLabels">If <c>true</c>, corresponding labeled files must exist in the blob container. If <c>false</c>, the model will be trained from forms only.</param>
         /// <param name="modelName">An optional, user-defined name to associate with the model.
         /// <remarks>
-        /// This property is only available for <see cref="FormRecognizerClientOptions.ServiceVersion.V2_1"/> and up.
+        /// This property is only available for <see cref="FormRecognizerClientOptions.ServiceVersion.V2_1"/> and newer.
         /// </remarks></param>
         /// <param name="trainingOptions">A set of options available for configuring the training request. For example, set a filter to apply
         /// to the documents in the source path for training.</param>
@@ -210,10 +218,14 @@ namespace Azure.AI.FormRecognizer.Training
         }
 
         /// <summary>
-        /// Trains a model from a collection of custom forms in a blob storage container.
+        /// Trains a model from a collection of custom forms in an Azure Blob Storage container.
         /// </summary>
-        /// <param name="trainingFilesUri">An externally accessible Azure storage blob container Uri.
-        /// For more information see <see href="https://docs.microsoft.com/azure/cognitive-services/form-recognizer/build-training-data-set#upload-your-training-data">here</see>.</param>
+        /// <param name="trainingFilesUri">
+        /// An externally accessible Azure Blob Storage container URI pointing to the container that has your training files.
+        /// Note that a container URI without SAS is accepted only when the container is public or has a managed identity
+        /// configured.
+        /// For more information on setting up a training data set, see <see href="https://docs.microsoft.com/azure/cognitive-services/form-recognizer/build-training-data-set#upload-your-training-data">this article</see>.
+        /// </param>
         /// <param name="useTrainingLabels">If <c>true</c>, corresponding labeled files must exist in the blob container. If <c>false</c>, the model will be trained from forms only.</param>
         /// <param name="trainingOptions">A set of options available for configuring the training request. For example, set a filter to apply
         /// to the documents in the source path for training.</param>
@@ -251,10 +263,14 @@ namespace Azure.AI.FormRecognizer.Training
         }
 
         /// <summary>
-        /// Trains a model from a collection of custom forms in a blob storage container.
+        /// Trains a model from a collection of custom forms in an Azure Blob Storage container.
         /// </summary>
-        /// <param name="trainingFilesUri">An externally accessible Azure storage blob container Uri.
-        /// For more information see <see href="https://docs.microsoft.com/azure/cognitive-services/form-recognizer/build-training-data-set#upload-your-training-data">here</see>.</param>
+        /// <param name="trainingFilesUri">
+        /// An externally accessible Azure Blob Storage container URI pointing to the container that has your training files.
+        /// Note that a container URI without SAS is accepted only when the container is public or has a managed identity
+        /// configured.
+        /// For more information on setting up a training data set, see <see href="https://docs.microsoft.com/azure/cognitive-services/form-recognizer/build-training-data-set#upload-your-training-data">this article</see>.
+        /// </param>
         /// <param name="useTrainingLabels">If <c>true</c>, corresponding labeled files must exist in the blob container. If <c>false</c>, the model will be trained from forms only.</param>
         /// <param name="trainingOptions">A set of options available for configuring the training request. For example, set a filter to apply
         /// to the documents in the source path for training.</param>
@@ -302,7 +318,7 @@ namespace Azure.AI.FormRecognizer.Training
         /// <param name="modelName">An optional, user-defined name to associate with the model.</param>
         /// <param name="cancellationToken">A <see cref="CancellationToken"/> controlling the request lifetime.</param>
         /// <remarks>
-        /// Method is only available for <see cref="FormRecognizerClientOptions.ServiceVersion.V2_1"/> and up.
+        /// Method is only available for <see cref="FormRecognizerClientOptions.ServiceVersion.V2_1"/> and newer.
         /// </remarks>
         /// <returns>
         /// <para>A <see cref="CreateComposedModelOperation"/> to wait on this long-running operation. Its Value upon successful
@@ -343,7 +359,7 @@ namespace Azure.AI.FormRecognizer.Training
         /// <param name="modelName">An optional, user-defined name to associate with the model.</param>
         /// <param name="cancellationToken">A <see cref="CancellationToken"/> controlling the request lifetime.</param>
         /// <remarks>
-        /// Method is only available for <see cref="FormRecognizerClientOptions.ServiceVersion.V2_1"/> and up.
+        /// Method is only available for <see cref="FormRecognizerClientOptions.ServiceVersion.V2_1"/> and newer.
         /// </remarks>
         /// <returns>
         /// <para>A <see cref="CreateComposedModelOperation"/> to wait on this long-running operation. Its Value upon successful
@@ -379,7 +395,7 @@ namespace Azure.AI.FormRecognizer.Training
 
         #endregion
 
-        #region Management Ops
+        #region Administration Ops
 
         /// <summary>
         /// Gets a description of a custom model, including the types of forms it can recognize and the fields it will extract for each form type.

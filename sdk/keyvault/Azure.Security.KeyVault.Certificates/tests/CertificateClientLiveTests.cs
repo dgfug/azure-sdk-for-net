@@ -41,6 +41,8 @@ namespace Azure.Security.KeyVault.Certificates.Tests
         public CertificateClientLiveTests(bool isAsync, CertificateClientOptions.ServiceVersion serviceVersion)
             : base(isAsync, serviceVersion, null /* RecordedTestMode.Record /* to re-record */)
         {
+            // TODO: https://github.com/Azure/azure-sdk-for-net/issues/11634
+            CompareBodies = false;
         }
 
         [SetUp]
@@ -66,7 +68,7 @@ namespace Azure.Security.KeyVault.Certificates.Tests
             }
         }
 
-        [Test]
+        [RecordedTest]
         public void StartCreateCertificateError()
         {
             string certName = Recording.GenerateId();
@@ -83,7 +85,7 @@ namespace Azure.Security.KeyVault.Certificates.Tests
             Assert.AreEqual(400, ex.Status);
         }
 
-        [Test]
+        [RecordedTest]
         public async Task VerifyGetCertificateOperation()
         {
             string certName = Recording.GenerateId();
@@ -101,7 +103,7 @@ namespace Azure.Security.KeyVault.Certificates.Tests
             Assert.IsNotNull(getOperation);
         }
 
-        [Test]
+        [RecordedTest]
         public async Task VerifyCancelCertificateOperation()
         {
             string certName = Recording.GenerateId();
@@ -143,7 +145,7 @@ namespace Azure.Security.KeyVault.Certificates.Tests
             Assert.AreEqual(200, operation.GetRawResponse().Status);
         }
 
-        [Test]
+        [RecordedTest]
         public async Task VerifyUnexpectedCancelCertificateOperation()
         {
             string certName = Recording.GenerateId();
@@ -187,7 +189,7 @@ namespace Azure.Security.KeyVault.Certificates.Tests
             Assert.AreEqual(200, operation.GetRawResponse().Status);
         }
 
-        [Test]
+        [RecordedTest]
         public async Task VerifyDeleteCertificateOperation()
         {
             string certName = Recording.GenerateId();
@@ -210,7 +212,7 @@ namespace Azure.Security.KeyVault.Certificates.Tests
             Assert.AreEqual(404, operation.GetRawResponse().Status);
         }
 
-        [Test]
+        [RecordedTest]
         public async Task VerifyUnexpectedDeleteCertificateOperation()
         {
             string certName = Recording.GenerateId();
@@ -241,7 +243,7 @@ namespace Azure.Security.KeyVault.Certificates.Tests
             Assert.AreEqual(404, operation.GetRawResponse().Status);
         }
 
-        [Test]
+        [RecordedTest]
         public async Task VerifyCertificateOperationError()
         {
             string issuerName = Recording.GenerateId();
@@ -292,7 +294,7 @@ namespace Azure.Security.KeyVault.Certificates.Tests
             }
         }
 
-        [Test]
+        [RecordedTest]
         public async Task VerifyCertificateGetWithPolicyInProgress()
         {
             string certName = Recording.GenerateId();
@@ -319,7 +321,7 @@ namespace Azure.Security.KeyVault.Certificates.Tests
             Assert.AreEqual(certificate.Name, certName);
         }
 
-        [Test]
+        [RecordedTest]
         public async Task VerifyGetCertificateCompleted()
         {
             string certName = Recording.GenerateId();
@@ -345,7 +347,7 @@ namespace Azure.Security.KeyVault.Certificates.Tests
             Assert.AreEqual(certificate.Name, certName);
         }
 
-        [Test]
+        [RecordedTest]
         public async Task VerifyGetCertificateCompletedSubsequently()
         {
             string certName = Recording.GenerateId();
@@ -372,7 +374,7 @@ namespace Azure.Security.KeyVault.Certificates.Tests
             Assert.NotNull(certificateWithPolicy.Properties.Version);
         }
 
-        [Test]
+        [RecordedTest]
         public async Task VerifyUpdateCertificate()
         {
             string certName = Recording.GenerateId();
@@ -400,7 +402,7 @@ namespace Azure.Security.KeyVault.Certificates.Tests
             CollectionAssert.AreEqual(expTags, updated.Properties.Tags);
         }
 
-        [Test]
+        [RecordedTest]
         public async Task VerifyDeleteRecoverPurge()
         {
             string certName = Recording.GenerateId();
@@ -440,7 +442,7 @@ namespace Azure.Security.KeyVault.Certificates.Tests
             await WaitForPurgedCertificate(certName);
         }
 
-        [Test]
+        [RecordedTest]
         public async Task VerifyImportCertificatePem()
         {
             string certificateName = Recording.GenerateId();
@@ -463,15 +465,16 @@ namespace Azure.Security.KeyVault.Certificates.Tests
             Assert.AreEqual("azuresdk@microsoft.com", cert.Policy.SubjectAlternativeNames?.Emails?[0]);
         }
 
-        [Test]
+        [RecordedTest]
         public async Task VerifyImportCertificatePemWithoutIssuer()
         {
             string certificateName = Recording.GenerateId();
-            byte[] certificateBytes = Encoding.ASCII.GetBytes(PemCertificateWithV3Extensions);
 
             #region Snippet:CertificateClientLiveTests_VerifyImportCertificatePem
 #if SNIPPET
             byte[] certificateBytes = File.ReadAllBytes("certificate.pem");
+#else
+            byte[] certificateBytes = Encoding.ASCII.GetBytes(PemCertificateWithV3Extensions);
 #endif
 
             ImportCertificateOptions options = new ImportCertificateOptions(certificateName, certificateBytes)
@@ -492,7 +495,7 @@ namespace Azure.Security.KeyVault.Certificates.Tests
             Assert.AreEqual("azuresdk@microsoft.com", cert.Policy.SubjectAlternativeNames?.Emails?[0]);
         }
 
-        [Test]
+        [RecordedTest]
         public async Task VerifyImportCertificatePfx()
         {
             string caCertificateName = Recording.GenerateId();
@@ -513,7 +516,7 @@ namespace Azure.Security.KeyVault.Certificates.Tests
             CollectionAssert.AreEqual(pubBytes, cert.Cer);
         }
 
-        [Test]
+        [RecordedTest]
         public async Task ValidateMergeCertificate()
         {
             string serverCertificateName = Recording.GenerateId();
@@ -580,7 +583,7 @@ namespace Azure.Security.KeyVault.Certificates.Tests
             CollectionAssert.AreEqual(mergedServerCertificate.Cer, completedServerCertificate.Cer);
         }
 
-        [Test]
+        [RecordedTest]
         public async Task VerifyGetIssuer()
         {
             string issuerName = Recording.GenerateId();
@@ -615,7 +618,7 @@ namespace Azure.Security.KeyVault.Certificates.Tests
             // Assert.AreEqual(issuer.Name, getIssuer.Name);
         }
 
-        [Test]
+        [RecordedTest]
         public async Task VerifyUpdateIssuer()
         {
             string issuerName = Recording.GenerateId();
@@ -639,7 +642,7 @@ namespace Azure.Security.KeyVault.Certificates.Tests
             Assert.AreEqual(updateProvider, updateIssuer.Provider);
         }
 
-        [Test]
+        [RecordedTest]
         public async Task VerifyGetPropertiesOfIssuersAsync()
         {
             string issuerName = Recording.GenerateId();
@@ -670,7 +673,7 @@ namespace Azure.Security.KeyVault.Certificates.Tests
             }
         }
 
-        [Test]
+        [RecordedTest]
         public async Task VerifyGetContacts()
         {
             IList<CertificateContact> contacts = new List<CertificateContact>();
@@ -707,7 +710,7 @@ namespace Azure.Security.KeyVault.Certificates.Tests
             }
         }
 
-        [Test]
+        [RecordedTest]
         public async Task VerifyGetCertificatePolicy()
         {
             string certName = Recording.GenerateId();
@@ -730,7 +733,7 @@ namespace Azure.Security.KeyVault.Certificates.Tests
             Assert.AreEqual(DefaultPolicy.ReuseKey, policy.ReuseKey);
         }
 
-        [Test]
+        [RecordedTest]
         public async Task VerifyUpdateCertificatePolicy()
         {
             string certName = Recording.GenerateId();
@@ -766,6 +769,7 @@ namespace Azure.Security.KeyVault.Certificates.Tests
             Assert.AreEqual(certificatePolicy.KeySize, updatePolicy.KeySize);
         }
 
+        [RecordedTest]
         [TestCase("application/x-pkcs12")]
         [TestCase("application/x-pem-file")]
         public async Task DownloadLatestCertificate(string contentType)
@@ -812,6 +816,7 @@ namespace Azure.Security.KeyVault.Certificates.Tests
             CollectionAssert.AreEqual(plaintext, decrypted);
         }
 
+        [RecordedTest]
         [TestCase("application/x-pkcs12")]
         [TestCase("application/x-pem-file")]
         public async Task DownloadVersionedCertificate(string contentType)
@@ -869,6 +874,7 @@ namespace Azure.Security.KeyVault.Certificates.Tests
             CollectionAssert.AreEqual(plaintext, decrypted);
         }
 
+        [RecordedTest]
         [TestCase("application/x-pkcs12")]
         [TestCase("application/x-pem-file")]
         public async Task DownloadNonExportableCertificate(string contentType)
@@ -898,10 +904,10 @@ namespace Azure.Security.KeyVault.Certificates.Tests
             Assert.IsFalse(x509certificate.HasPrivateKey);
         }
 
-        [Test]
+        [RecordedTest]
         public async Task DownloadECDsaCertificateSignRemoteVerifyLocal([EnumValues] CertificateContentType contentType, [EnumValues] CertificateKeyCurveName keyCurveName)
         {
-#if NET461
+#if NET462
             Assert.Ignore("ECC is not supported before .NET Framework 4.7");
 #endif
             if (keyCurveName == CertificateKeyCurveName.P256K && RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
@@ -928,7 +934,15 @@ namespace Azure.Security.KeyVault.Certificates.Tests
             CertificateOperation operation = await Client.StartCreateCertificateAsync(name, policy);
             RegisterForCleanup(name);
 
-            await operation.WaitForCompletionAsync(DefaultCertificateOperationPollingInterval, default);
+            try
+            {
+                await operation.WaitForCompletionAsync(DefaultCertificateOperationPollingInterval, default);
+            }
+            catch (InvalidOperationException ex) when (ex.Message.Contains("An internal error has occurred"))
+            {
+                // This test fails often enough with an internal HTTP 500 to ignore.
+                Assert.Inconclusive("The service encountered an internal error");
+            }
 
             // Sign data remotely.
             byte[] plaintext = Encoding.UTF8.GetBytes(nameof(DownloadECDsaCertificateSignRemoteVerifyLocal));
@@ -955,10 +969,10 @@ namespace Azure.Security.KeyVault.Certificates.Tests
             }
         }
 
-        [Test]
+        [RecordedTest]
         public async Task DownloadECDsaCertificateSignLocalVerifyRemote([EnumValues] CertificateContentType contentType, [EnumValues] CertificateKeyCurveName keyCurveName)
         {
-#if NET461
+#if NET462
             Assert.Ignore("ECC is not supported before .NET Framework 4.7");
 #endif
             if (keyCurveName == CertificateKeyCurveName.P256K && RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
@@ -985,7 +999,15 @@ namespace Azure.Security.KeyVault.Certificates.Tests
             CertificateOperation operation = await Client.StartCreateCertificateAsync(name, policy);
             RegisterForCleanup(name);
 
-            await operation.WaitForCompletionAsync(DefaultCertificateOperationPollingInterval, default);
+            try
+            {
+                await operation.WaitForCompletionAsync(DefaultCertificateOperationPollingInterval, default);
+            }
+            catch (InvalidOperationException ex) when (ex.Message.Contains("An internal error has occurred"))
+            {
+                // This test fails often enough with an internal HTTP 500 to ignore.
+                Assert.Inconclusive("The service encountered an internal error");
+            }
 
             // Download the certificate and sign data locally.
             byte[] plaintext = Encoding.UTF8.GetBytes(nameof(DownloadECDsaCertificateSignRemoteVerifyLocal));
@@ -1013,6 +1035,30 @@ namespace Azure.Security.KeyVault.Certificates.Tests
                 certificate?.Dispose();
             }
         }
+
+        [RecordedTest]
+        public async Task RecoverCertificate()
+        {
+            string certificateName = Recording.GenerateId();
+            CertificateOperation createOperation = await Client.StartCreateCertificateAsync(certificateName, CertificatePolicy.Default);
+            KeyVaultCertificateWithPolicy certificate = await createOperation.WaitForCompletionAsync();
+
+            DeleteCertificateOperation deleteOperation = await Client.StartDeleteCertificateAsync(certificateName);
+            await deleteOperation.WaitForCompletionAsync();
+
+            RecoverDeletedCertificateOperation recoverOperation = await Client.StartRecoverDeletedCertificateAsync(certificateName);
+            KeyVaultCertificateWithPolicy recoveredCertificate = await recoverOperation.WaitForCompletionAsync();
+
+            Assert.That(recoveredCertificate, Is.EqualTo(certificate).Using<KeyVaultCertificateWithPolicy>(AreEquivalent));
+        }
+
+        private static bool AreEquivalent(KeyVaultCertificateWithPolicy a, KeyVaultCertificateWithPolicy b) =>
+            string.Equals(a.Name, b.Name) &&
+            string.Equals(a.Properties.Version, b.Properties.Version) &&
+            a.Properties.CreatedOn == b.Properties.CreatedOn &&
+            string.Equals(a.Policy.Subject, b.Policy.Subject) &&
+            string.Equals(a.Policy.IssuerName, b.Policy.IssuerName) &&
+            string.Equals(a.Policy.CertificateType, b.Policy.CertificateType);
 
         public CryptographyClient GetCryptographyClient(Uri keyId) => InstrumentClient(
                 new CryptographyClient(

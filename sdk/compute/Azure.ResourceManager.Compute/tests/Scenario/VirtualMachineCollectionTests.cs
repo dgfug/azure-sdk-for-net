@@ -9,10 +9,11 @@ using NUnit.Framework;
 
 namespace Azure.ResourceManager.Compute.Tests
 {
+    [ClientTestFixture(true, "2022-08-01", "2021-04-01", "2020-06-01", "2022-11-01", "2023-03-01", "2023-07-01")]
     public class VirtualMachineCollectionTests : VirtualMachineTestBase
     {
-        public VirtualMachineCollectionTests(bool async)
-            : base(async)//, RecordedTestMode.Record)
+        public VirtualMachineCollectionTests(bool async, string apiVersion)
+            : base(async, VirtualMachineResource.ResourceType, apiVersion)//, RecordedTestMode.Record)
         {
         }
 
@@ -21,7 +22,7 @@ namespace Azure.ResourceManager.Compute.Tests
         public async Task CreateOrUpdate()
         {
             string vmName = Recording.GenerateAssetName("testVM-");
-            VirtualMachine virtualMachine = await CreateVirtualMachineAsync(vmName);
+            VirtualMachineResource virtualMachine = await CreateVirtualMachineAsync(vmName);
             Assert.AreEqual(vmName, virtualMachine.Data.Name);
         }
 
@@ -34,8 +35,8 @@ namespace Azure.ResourceManager.Compute.Tests
             var nic = await CreateBasicDependenciesOfVirtualMachineAsync();
             var input = ResourceDataHelper.GetBasicLinuxVirtualMachineData(DefaultLocation, vmName, nic.Id);
             var lro = await collection.CreateOrUpdateAsync(WaitUntil.Completed, vmName, input);
-            VirtualMachine vm1 = lro.Value;
-            VirtualMachine vm2 = await collection.GetAsync(vmName);
+            VirtualMachineResource vm1 = lro.Value;
+            VirtualMachineResource vm2 = await collection.GetAsync(vmName);
 
             ResourceDataHelper.AssertVirtualMachine(vm1.Data, vm2.Data);
         }
@@ -49,7 +50,7 @@ namespace Azure.ResourceManager.Compute.Tests
             var nic = await CreateBasicDependenciesOfVirtualMachineAsync();
             var input = ResourceDataHelper.GetBasicLinuxVirtualMachineData(DefaultLocation, vmName, nic.Id);
             var lro = await collection.CreateOrUpdateAsync(WaitUntil.Completed, vmName, input);
-            VirtualMachine vm = lro.Value;
+            VirtualMachineResource vm = lro.Value;
             Assert.IsTrue(await collection.ExistsAsync(vmName));
             Assert.IsFalse(await collection.ExistsAsync(vmName + "1"));
 
@@ -91,7 +92,7 @@ namespace Azure.ResourceManager.Compute.Tests
             _ = await collection.CreateOrUpdateAsync(WaitUntil.Completed, vmName1, input1);
             _ = await collection.CreateOrUpdateAsync(WaitUntil.Completed, vmName2, input2);
 
-            VirtualMachine vm1 = null, vm2 = null;
+            VirtualMachineResource vm1 = null, vm2 = null;
             await foreach (var vm in DefaultSubscription.GetVirtualMachinesAsync())
             {
                 if (vm.Data.Name == vmName1)

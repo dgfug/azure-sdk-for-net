@@ -5,6 +5,7 @@
 
 #nullable disable
 
+using System;
 using System.Collections.Generic;
 using System.Text.Json;
 using Azure.Core;
@@ -20,31 +21,31 @@ namespace Azure.ResourceManager.Resources
             writer.WriteStartObject();
             if (Optional.IsDefined(Location))
             {
-                writer.WritePropertyName("location");
-                writer.WriteStringValue(Location);
+                writer.WritePropertyName("location"u8);
+                writer.WriteStringValue(Location.Value);
             }
-            if (Optional.IsDefined(Identity))
+            if (Optional.IsDefined(ManagedIdentity))
             {
-                writer.WritePropertyName("identity");
-                JsonSerializer.Serialize(writer, Identity);
+                writer.WritePropertyName("identity"u8);
+                JsonSerializer.Serialize(writer, ManagedIdentity);
             }
-            writer.WritePropertyName("properties");
+            writer.WritePropertyName("properties"u8);
             writer.WriteStartObject();
             if (Optional.IsDefined(DisplayName))
             {
-                writer.WritePropertyName("displayName");
+                writer.WritePropertyName("displayName"u8);
                 writer.WriteStringValue(DisplayName);
             }
             if (Optional.IsDefined(PolicyDefinitionId))
             {
-                writer.WritePropertyName("policyDefinitionId");
+                writer.WritePropertyName("policyDefinitionId"u8);
                 writer.WriteStringValue(PolicyDefinitionId);
             }
-            if (Optional.IsCollectionDefined(NotScopes))
+            if (Optional.IsCollectionDefined(ExcludedScopes))
             {
-                writer.WritePropertyName("notScopes");
+                writer.WritePropertyName("notScopes"u8);
                 writer.WriteStartArray();
-                foreach (var item in NotScopes)
+                foreach (var item in ExcludedScopes)
                 {
                     writer.WriteStringValue(item);
                 }
@@ -52,7 +53,7 @@ namespace Azure.ResourceManager.Resources
             }
             if (Optional.IsCollectionDefined(Parameters))
             {
-                writer.WritePropertyName("parameters");
+                writer.WritePropertyName("parameters"u8);
                 writer.WriteStartObject();
                 foreach (var item in Parameters)
                 {
@@ -63,24 +64,51 @@ namespace Azure.ResourceManager.Resources
             }
             if (Optional.IsDefined(Description))
             {
-                writer.WritePropertyName("description");
+                writer.WritePropertyName("description"u8);
                 writer.WriteStringValue(Description);
             }
             if (Optional.IsDefined(Metadata))
             {
-                writer.WritePropertyName("metadata");
-                writer.WriteObjectValue(Metadata);
+                writer.WritePropertyName("metadata"u8);
+#if NET6_0_OR_GREATER
+				writer.WriteRawValue(Metadata);
+#else
+                using (JsonDocument document = JsonDocument.Parse(Metadata))
+                {
+                    JsonSerializer.Serialize(writer, document.RootElement);
+                }
+#endif
             }
             if (Optional.IsDefined(EnforcementMode))
             {
-                writer.WritePropertyName("enforcementMode");
+                writer.WritePropertyName("enforcementMode"u8);
                 writer.WriteStringValue(EnforcementMode.Value.ToString());
             }
             if (Optional.IsCollectionDefined(NonComplianceMessages))
             {
-                writer.WritePropertyName("nonComplianceMessages");
+                writer.WritePropertyName("nonComplianceMessages"u8);
                 writer.WriteStartArray();
                 foreach (var item in NonComplianceMessages)
+                {
+                    writer.WriteObjectValue(item);
+                }
+                writer.WriteEndArray();
+            }
+            if (Optional.IsCollectionDefined(ResourceSelectors))
+            {
+                writer.WritePropertyName("resourceSelectors"u8);
+                writer.WriteStartArray();
+                foreach (var item in ResourceSelectors)
+                {
+                    writer.WriteObjectValue(item);
+                }
+                writer.WriteEndArray();
+            }
+            if (Optional.IsCollectionDefined(Overrides))
+            {
+                writer.WritePropertyName("overrides"u8);
+                writer.WriteStartArray();
+                foreach (var item in Overrides)
                 {
                     writer.WriteObjectValue(item);
                 }
@@ -92,59 +120,72 @@ namespace Azure.ResourceManager.Resources
 
         internal static PolicyAssignmentData DeserializePolicyAssignmentData(JsonElement element)
         {
-            Optional<string> location = default;
-            Optional<SystemAssignedServiceIdentity> identity = default;
+            if (element.ValueKind == JsonValueKind.Null)
+            {
+                return null;
+            }
+            Optional<AzureLocation> location = default;
+            Optional<ManagedServiceIdentity> identity = default;
             ResourceIdentifier id = default;
             string name = default;
             ResourceType type = default;
-            SystemData systemData = default;
+            Optional<SystemData> systemData = default;
             Optional<string> displayName = default;
             Optional<string> policyDefinitionId = default;
             Optional<string> scope = default;
             Optional<IList<string>> notScopes = default;
-            Optional<IDictionary<string, ParameterValuesValue>> parameters = default;
+            Optional<IDictionary<string, ArmPolicyParameterValue>> parameters = default;
             Optional<string> description = default;
-            Optional<object> metadata = default;
+            Optional<BinaryData> metadata = default;
             Optional<EnforcementMode> enforcementMode = default;
             Optional<IList<NonComplianceMessage>> nonComplianceMessages = default;
+            Optional<IList<ResourceSelector>> resourceSelectors = default;
+            Optional<IList<PolicyOverride>> overrides = default;
             foreach (var property in element.EnumerateObject())
             {
-                if (property.NameEquals("location"))
-                {
-                    location = property.Value.GetString();
-                    continue;
-                }
-                if (property.NameEquals("identity"))
+                if (property.NameEquals("location"u8))
                 {
                     if (property.Value.ValueKind == JsonValueKind.Null)
                     {
-                        property.ThrowNonNullablePropertyIsNull();
                         continue;
                     }
-                    identity = JsonSerializer.Deserialize<SystemAssignedServiceIdentity>(property.Value.ToString());
+                    location = new AzureLocation(property.Value.GetString());
                     continue;
                 }
-                if (property.NameEquals("id"))
+                if (property.NameEquals("identity"u8))
+                {
+                    if (property.Value.ValueKind == JsonValueKind.Null)
+                    {
+                        continue;
+                    }
+                    identity = JsonSerializer.Deserialize<ManagedServiceIdentity>(property.Value.GetRawText());
+                    continue;
+                }
+                if (property.NameEquals("id"u8))
                 {
                     id = new ResourceIdentifier(property.Value.GetString());
                     continue;
                 }
-                if (property.NameEquals("name"))
+                if (property.NameEquals("name"u8))
                 {
                     name = property.Value.GetString();
                     continue;
                 }
-                if (property.NameEquals("type"))
+                if (property.NameEquals("type"u8))
                 {
-                    type = property.Value.GetString();
+                    type = new ResourceType(property.Value.GetString());
                     continue;
                 }
-                if (property.NameEquals("systemData"))
+                if (property.NameEquals("systemData"u8))
                 {
-                    systemData = JsonSerializer.Deserialize<SystemData>(property.Value.ToString());
+                    if (property.Value.ValueKind == JsonValueKind.Null)
+                    {
+                        continue;
+                    }
+                    systemData = JsonSerializer.Deserialize<SystemData>(property.Value.GetRawText());
                     continue;
                 }
-                if (property.NameEquals("properties"))
+                if (property.NameEquals("properties"u8))
                 {
                     if (property.Value.ValueKind == JsonValueKind.Null)
                     {
@@ -153,26 +194,25 @@ namespace Azure.ResourceManager.Resources
                     }
                     foreach (var property0 in property.Value.EnumerateObject())
                     {
-                        if (property0.NameEquals("displayName"))
+                        if (property0.NameEquals("displayName"u8))
                         {
                             displayName = property0.Value.GetString();
                             continue;
                         }
-                        if (property0.NameEquals("policyDefinitionId"))
+                        if (property0.NameEquals("policyDefinitionId"u8))
                         {
                             policyDefinitionId = property0.Value.GetString();
                             continue;
                         }
-                        if (property0.NameEquals("scope"))
+                        if (property0.NameEquals("scope"u8))
                         {
                             scope = property0.Value.GetString();
                             continue;
                         }
-                        if (property0.NameEquals("notScopes"))
+                        if (property0.NameEquals("notScopes"u8))
                         {
                             if (property0.Value.ValueKind == JsonValueKind.Null)
                             {
-                                property0.ThrowNonNullablePropertyIsNull();
                                 continue;
                             }
                             List<string> array = new List<string>();
@@ -183,51 +223,47 @@ namespace Azure.ResourceManager.Resources
                             notScopes = array;
                             continue;
                         }
-                        if (property0.NameEquals("parameters"))
+                        if (property0.NameEquals("parameters"u8))
                         {
                             if (property0.Value.ValueKind == JsonValueKind.Null)
                             {
-                                property0.ThrowNonNullablePropertyIsNull();
                                 continue;
                             }
-                            Dictionary<string, ParameterValuesValue> dictionary = new Dictionary<string, ParameterValuesValue>();
+                            Dictionary<string, ArmPolicyParameterValue> dictionary = new Dictionary<string, ArmPolicyParameterValue>();
                             foreach (var property1 in property0.Value.EnumerateObject())
                             {
-                                dictionary.Add(property1.Name, ParameterValuesValue.DeserializeParameterValuesValue(property1.Value));
+                                dictionary.Add(property1.Name, ArmPolicyParameterValue.DeserializeArmPolicyParameterValue(property1.Value));
                             }
                             parameters = dictionary;
                             continue;
                         }
-                        if (property0.NameEquals("description"))
+                        if (property0.NameEquals("description"u8))
                         {
                             description = property0.Value.GetString();
                             continue;
                         }
-                        if (property0.NameEquals("metadata"))
+                        if (property0.NameEquals("metadata"u8))
                         {
                             if (property0.Value.ValueKind == JsonValueKind.Null)
                             {
-                                property0.ThrowNonNullablePropertyIsNull();
                                 continue;
                             }
-                            metadata = property0.Value.GetObject();
+                            metadata = BinaryData.FromString(property0.Value.GetRawText());
                             continue;
                         }
-                        if (property0.NameEquals("enforcementMode"))
+                        if (property0.NameEquals("enforcementMode"u8))
                         {
                             if (property0.Value.ValueKind == JsonValueKind.Null)
                             {
-                                property0.ThrowNonNullablePropertyIsNull();
                                 continue;
                             }
                             enforcementMode = new EnforcementMode(property0.Value.GetString());
                             continue;
                         }
-                        if (property0.NameEquals("nonComplianceMessages"))
+                        if (property0.NameEquals("nonComplianceMessages"u8))
                         {
                             if (property0.Value.ValueKind == JsonValueKind.Null)
                             {
-                                property0.ThrowNonNullablePropertyIsNull();
                                 continue;
                             }
                             List<NonComplianceMessage> array = new List<NonComplianceMessage>();
@@ -238,11 +274,39 @@ namespace Azure.ResourceManager.Resources
                             nonComplianceMessages = array;
                             continue;
                         }
+                        if (property0.NameEquals("resourceSelectors"u8))
+                        {
+                            if (property0.Value.ValueKind == JsonValueKind.Null)
+                            {
+                                continue;
+                            }
+                            List<ResourceSelector> array = new List<ResourceSelector>();
+                            foreach (var item in property0.Value.EnumerateArray())
+                            {
+                                array.Add(ResourceSelector.DeserializeResourceSelector(item));
+                            }
+                            resourceSelectors = array;
+                            continue;
+                        }
+                        if (property0.NameEquals("overrides"u8))
+                        {
+                            if (property0.Value.ValueKind == JsonValueKind.Null)
+                            {
+                                continue;
+                            }
+                            List<PolicyOverride> array = new List<PolicyOverride>();
+                            foreach (var item in property0.Value.EnumerateArray())
+                            {
+                                array.Add(PolicyOverride.DeserializePolicyOverride(item));
+                            }
+                            overrides = array;
+                            continue;
+                        }
                     }
                     continue;
                 }
             }
-            return new PolicyAssignmentData(id, name, type, systemData, location.Value, identity, displayName.Value, policyDefinitionId.Value, scope.Value, Optional.ToList(notScopes), Optional.ToDictionary(parameters), description.Value, metadata.Value, Optional.ToNullable(enforcementMode), Optional.ToList(nonComplianceMessages));
+            return new PolicyAssignmentData(id, name, type, systemData.Value, Optional.ToNullable(location), identity, displayName.Value, policyDefinitionId.Value, scope.Value, Optional.ToList(notScopes), Optional.ToDictionary(parameters), description.Value, metadata.Value, Optional.ToNullable(enforcementMode), Optional.ToList(nonComplianceMessages), Optional.ToList(resourceSelectors), Optional.ToList(overrides));
         }
     }
 }

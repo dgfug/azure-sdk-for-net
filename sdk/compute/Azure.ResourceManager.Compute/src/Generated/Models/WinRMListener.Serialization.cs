@@ -5,6 +5,7 @@
 
 #nullable disable
 
+using System;
 using System.Text.Json;
 using Azure.Core;
 
@@ -17,36 +18,43 @@ namespace Azure.ResourceManager.Compute.Models
             writer.WriteStartObject();
             if (Optional.IsDefined(Protocol))
             {
-                writer.WritePropertyName("protocol");
+                writer.WritePropertyName("protocol"u8);
                 writer.WriteStringValue(Protocol.Value.ToSerialString());
             }
-            if (Optional.IsDefined(CertificateUrl))
+            if (Optional.IsDefined(CertificateUri))
             {
-                writer.WritePropertyName("certificateUrl");
-                writer.WriteStringValue(CertificateUrl);
+                writer.WritePropertyName("certificateUrl"u8);
+                writer.WriteStringValue(CertificateUri.AbsoluteUri);
             }
             writer.WriteEndObject();
         }
 
         internal static WinRMListener DeserializeWinRMListener(JsonElement element)
         {
-            Optional<ProtocolTypes> protocol = default;
-            Optional<string> certificateUrl = default;
+            if (element.ValueKind == JsonValueKind.Null)
+            {
+                return null;
+            }
+            Optional<WinRMListenerProtocolType> protocol = default;
+            Optional<Uri> certificateUrl = default;
             foreach (var property in element.EnumerateObject())
             {
-                if (property.NameEquals("protocol"))
+                if (property.NameEquals("protocol"u8))
                 {
                     if (property.Value.ValueKind == JsonValueKind.Null)
                     {
-                        property.ThrowNonNullablePropertyIsNull();
                         continue;
                     }
-                    protocol = property.Value.GetString().ToProtocolTypes();
+                    protocol = property.Value.GetString().ToWinRMListenerProtocolType();
                     continue;
                 }
-                if (property.NameEquals("certificateUrl"))
+                if (property.NameEquals("certificateUrl"u8))
                 {
-                    certificateUrl = property.Value.GetString();
+                    if (property.Value.ValueKind == JsonValueKind.Null)
+                    {
+                        continue;
+                    }
+                    certificateUrl = new Uri(property.Value.GetString());
                     continue;
                 }
             }

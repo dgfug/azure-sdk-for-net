@@ -15,13 +15,17 @@ namespace Azure.ResourceManager.Cdn.Models
         void IUtf8JsonSerializable.Write(Utf8JsonWriter writer)
         {
             writer.WriteStartObject();
-            writer.WritePropertyName("name");
+            writer.WritePropertyName("name"u8);
             writer.WriteStringValue(Name.ToString());
             writer.WriteEndObject();
         }
 
         internal static DeliveryRuleAction DeserializeDeliveryRuleAction(JsonElement element)
         {
+            if (element.ValueKind == JsonValueKind.Null)
+            {
+                return null;
+            }
             if (element.TryGetProperty("name", out JsonElement discriminator))
             {
                 switch (discriminator.GetString())
@@ -31,21 +35,13 @@ namespace Azure.ResourceManager.Cdn.Models
                     case "ModifyRequestHeader": return DeliveryRuleRequestHeaderAction.DeserializeDeliveryRuleRequestHeaderAction(element);
                     case "ModifyResponseHeader": return DeliveryRuleResponseHeaderAction.DeserializeDeliveryRuleResponseHeaderAction(element);
                     case "OriginGroupOverride": return OriginGroupOverrideAction.DeserializeOriginGroupOverrideAction(element);
-                    case "UrlRedirect": return UrlRedirectAction.DeserializeUrlRedirectAction(element);
-                    case "UrlRewrite": return UrlRewriteAction.DeserializeUrlRewriteAction(element);
-                    case "UrlSigning": return UrlSigningAction.DeserializeUrlSigningAction(element);
+                    case "RouteConfigurationOverride": return DeliveryRuleRouteConfigurationOverrideAction.DeserializeDeliveryRuleRouteConfigurationOverrideAction(element);
+                    case "UrlRedirect": return UriRedirectAction.DeserializeUriRedirectAction(element);
+                    case "UrlRewrite": return UriRewriteAction.DeserializeUriRewriteAction(element);
+                    case "UrlSigning": return UriSigningAction.DeserializeUriSigningAction(element);
                 }
             }
-            DeliveryRuleActionType name = default;
-            foreach (var property in element.EnumerateObject())
-            {
-                if (property.NameEquals("name"))
-                {
-                    name = new DeliveryRuleActionType(property.Value.GetString());
-                    continue;
-                }
-            }
-            return new DeliveryRuleAction(name);
+            return UnknownDeliveryRuleAction.DeserializeUnknownDeliveryRuleAction(element);
         }
     }
 }

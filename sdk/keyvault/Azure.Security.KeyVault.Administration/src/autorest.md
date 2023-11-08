@@ -9,13 +9,15 @@ Run `dotnet build /t:GenerateCode` in src directory to re-generate.
 ``` yaml
 title: Azure.Security.KeyVault.Administration
 input-file:
-    - https://raw.githubusercontent.com/Azure/azure-rest-api-specs/b7d6b00a7f388f048772ea249114a63773312538/specification/keyvault/data-plane/Microsoft.KeyVault/preview/7.3-preview/rbac.json
-    - https://raw.githubusercontent.com/Azure/azure-rest-api-specs/b7d6b00a7f388f048772ea249114a63773312538/specification/keyvault/data-plane/Microsoft.KeyVault/preview/7.3-preview/backuprestore.json
+- https://raw.githubusercontent.com/Azure/azure-rest-api-specs/5dd1107d5f2be8d600325d795450e1d854fbe7e8/specification/keyvault/data-plane/Microsoft.KeyVault/preview/7.5-preview.1/rbac.json
+- https://raw.githubusercontent.com/Azure/azure-rest-api-specs/5dd1107d5f2be8d600325d795450e1d854fbe7e8/specification/keyvault/data-plane/Microsoft.KeyVault/preview/7.5-preview.1/backuprestore.json
+- https://raw.githubusercontent.com/Azure/azure-rest-api-specs/5dd1107d5f2be8d600325d795450e1d854fbe7e8/specification/keyvault/data-plane/Microsoft.KeyVault/preview/7.5-preview.1/settings.json
 namespace: Azure.Security.KeyVault.Administration
+generation1-convenience-client: true
 include-csproj: disable
 ```
 
-## Swagger customization
+## Swagger customizations
 
 These changes should eventually be included in the swagger or at least centralized in Azure/azure-rest-api-specs.
 
@@ -53,4 +55,36 @@ directive:
 - where-operation: RoleDefinitions_Delete
   transform: >
     delete $.responses["200"].schema;
+```
+
+#### Specify client name for settings operations
+
+``` yaml
+directive:
+- rename-operation:
+    from: UpdateSetting
+    to: Settings_UpdateSetting
+- rename-operation:
+    from: GetSetting
+    to: Settings_GetSetting
+- rename-operation:
+    from: GetSettings
+    to: Settings_GetSettings
+```
+
+## C# customizations
+
+``` yaml
+directive:
+# [CodeGenMember("Type")] yields errors, so we have to rename via autorest transform.
+- where: $.definitions.Setting.properties.type
+  from: swagger-document
+  transform: >
+    $["x-ms-client-name"] = "SettingType";
+
+# [CodeGenSuppress("Value")] yields errors, so we have to rename via autorest transforms.
+- where: $.definitions.Setting.properties.value
+  from: swagger-document
+  transform: >
+    $["x-ms-client-name"] = "content";
 ```

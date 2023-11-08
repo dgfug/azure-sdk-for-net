@@ -6,6 +6,7 @@ using Azure.Core.TestFramework;
 using NUnit.Framework;
 using Azure.ResourceManager.ConnectedVMwarevSphere.Models;
 using Azure.ResourceManager.ConnectedVMwarevSphere.Tests.Helpers;
+using Azure.ResourceManager.Resources.Models;
 
 namespace Azure.ResourceManager.ConnectedVMwarevSphere.Tests.tests.Tests
 {    public class VirtualNetworkTests : ConnectedVMwareTestBase
@@ -36,7 +37,7 @@ namespace Azure.ResourceManager.ConnectedVMwarevSphere.Tests.tests.Tests
             vnetBody.VCenterId = VcenterId;
             vnetBody.ExtendedLocation = _extendedLocation;
             // create virtual network
-            VirtualNetwork vnet1 = (await _virtualNetworkCollection.CreateOrUpdateAsync(WaitUntil.Completed, vnetName, vnetBody)).Value;
+            VirtualNetworkResource vnet1 = (await _virtualNetworkCollection.CreateOrUpdateAsync(WaitUntil.Completed, vnetName, vnetBody)).Value;
             Assert.IsNotNull(vnet1);
             Assert.AreEqual(vnet1.Id.Name, vnetName);
         }
@@ -57,7 +58,7 @@ namespace Azure.ResourceManager.ConnectedVMwarevSphere.Tests.tests.Tests
             vnetBody.VCenterId = VcenterId;
             vnetBody.ExtendedLocation = _extendedLocation;
             // create virtual network
-            VirtualNetwork vnet1 = (await _virtualNetworkCollection.CreateOrUpdateAsync(WaitUntil.Completed, vnetName, vnetBody)).Value;
+            VirtualNetworkResource vnet1 = (await _virtualNetworkCollection.CreateOrUpdateAsync(WaitUntil.Completed, vnetName, vnetBody)).Value;
             Assert.IsNotNull(vnet1);
             Assert.AreEqual(vnet1.Id.Name, vnetName);
             // get virtual network
@@ -81,12 +82,12 @@ namespace Azure.ResourceManager.ConnectedVMwarevSphere.Tests.tests.Tests
             vnetBody.VCenterId = VcenterId;
             vnetBody.ExtendedLocation = _extendedLocation;
             // create virtual network
-            VirtualNetwork vnet1 = (await _virtualNetworkCollection.CreateOrUpdateAsync(WaitUntil.Completed, vnetName, vnetBody)).Value;
+            VirtualNetworkResource vnet1 = (await _virtualNetworkCollection.CreateOrUpdateAsync(WaitUntil.Completed, vnetName, vnetBody)).Value;
             Assert.IsNotNull(vnet1);
             Assert.AreEqual(vnet1.Id.Name, vnetName);
             // check for exists virtual network
-            vnet1 = await _virtualNetworkCollection.GetIfExistsAsync(vnetName);
-            Assert.AreEqual(vnet1.Id.Name, vnetName);
+            bool exists = await _virtualNetworkCollection.ExistsAsync(vnetName);
+            Assert.IsTrue(exists);
         }
 
         [TestCase]
@@ -105,7 +106,7 @@ namespace Azure.ResourceManager.ConnectedVMwarevSphere.Tests.tests.Tests
             vnetBody.VCenterId = VcenterId;
             vnetBody.ExtendedLocation = _extendedLocation;
             // create virtual network
-            VirtualNetwork vnet1 = (await _virtualNetworkCollection.CreateOrUpdateAsync(WaitUntil.Completed, vnetName, vnetBody)).Value;
+            VirtualNetworkResource vnet1 = (await _virtualNetworkCollection.CreateOrUpdateAsync(WaitUntil.Completed, vnetName, vnetBody)).Value;
             Assert.IsNotNull(vnet1);
             Assert.AreEqual(vnet1.Id.Name, vnetName);
             int count = 0;
@@ -132,7 +133,7 @@ namespace Azure.ResourceManager.ConnectedVMwarevSphere.Tests.tests.Tests
             vnetBody.VCenterId = VcenterId;
             vnetBody.ExtendedLocation = _extendedLocation;
             // create virtual network
-            VirtualNetwork vnet1 = (await _virtualNetworkCollection.CreateOrUpdateAsync(WaitUntil.Completed, vnetName, vnetBody)).Value;
+            VirtualNetworkResource vnet1 = (await _virtualNetworkCollection.CreateOrUpdateAsync(WaitUntil.Completed, vnetName, vnetBody)).Value;
             Assert.IsNotNull(vnet1);
             Assert.AreEqual(vnet1.Id.Name, vnetName);
             vnet1 = null;

@@ -10,36 +10,54 @@ using Azure.Core;
 
 namespace Azure.ResourceManager.Sql.Models
 {
-    internal partial class FailoverGroupReadOnlyEndpoint : IUtf8JsonSerializable
+    public partial class FailoverGroupReadOnlyEndpoint : IUtf8JsonSerializable
     {
         void IUtf8JsonSerializable.Write(Utf8JsonWriter writer)
         {
             writer.WriteStartObject();
             if (Optional.IsDefined(FailoverPolicy))
             {
-                writer.WritePropertyName("failoverPolicy");
+                writer.WritePropertyName("failoverPolicy"u8);
                 writer.WriteStringValue(FailoverPolicy.Value.ToString());
+            }
+            if (Optional.IsDefined(TargetServer))
+            {
+                writer.WritePropertyName("targetServer"u8);
+                writer.WriteStringValue(TargetServer);
             }
             writer.WriteEndObject();
         }
 
         internal static FailoverGroupReadOnlyEndpoint DeserializeFailoverGroupReadOnlyEndpoint(JsonElement element)
         {
+            if (element.ValueKind == JsonValueKind.Null)
+            {
+                return null;
+            }
             Optional<ReadOnlyEndpointFailoverPolicy> failoverPolicy = default;
+            Optional<ResourceIdentifier> targetServer = default;
             foreach (var property in element.EnumerateObject())
             {
-                if (property.NameEquals("failoverPolicy"))
+                if (property.NameEquals("failoverPolicy"u8))
                 {
                     if (property.Value.ValueKind == JsonValueKind.Null)
                     {
-                        property.ThrowNonNullablePropertyIsNull();
                         continue;
                     }
                     failoverPolicy = new ReadOnlyEndpointFailoverPolicy(property.Value.GetString());
                     continue;
                 }
+                if (property.NameEquals("targetServer"u8))
+                {
+                    if (property.Value.ValueKind == JsonValueKind.Null)
+                    {
+                        continue;
+                    }
+                    targetServer = new ResourceIdentifier(property.Value.GetString());
+                    continue;
+                }
             }
-            return new FailoverGroupReadOnlyEndpoint(Optional.ToNullable(failoverPolicy));
+            return new FailoverGroupReadOnlyEndpoint(Optional.ToNullable(failoverPolicy), targetServer.Value);
         }
     }
 }
